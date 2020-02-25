@@ -1,0 +1,26 @@
+Sub ChangeValueBasedOnCellColor()
+    Dim rg As Range
+    Dim xRg As Range
+    Set xRg = Selection.Cells
+    Application.DisplayAlerts = False
+    For Each rg In xRg
+        With rg
+            Select Case .Interior.Color
+                Case Is = 886527 'Orange
+                    .Value = 1
+                Case Is = 16777215 'White
+                    .Value = 0
+            End Select
+        End With
+    Next
+    Application.DisplayAlerts = False
+End Sub
+
+Function CheckBackgroundColor(cell As Range)
+    If (cell.Cells.Count > 1) Then
+        CheckBackgroundColor = "Enter one cell"
+        Exit Function
+    Else
+        CheckBackgroundColor = cell.Interior.Color
+    End If
+End Function

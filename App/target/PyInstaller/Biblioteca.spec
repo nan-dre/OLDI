@@ -3,13 +3,13 @@
 block_cipher = None
 
 
-a = Analysis(['D:\\Proiecte\\Python\\School Library Database\\src\\main\\python\\main.py'],
-             pathex=['D:\\Proiecte\\Python\\School Library Database\\target\\PyInstaller'],
+a = Analysis(['D:\\Proiecte\\Python\\OLDI\\App\\src\\main\\python\\main.py'],
+             pathex=['D:\\Proiecte\\Python\\OLDI\\App\\target\\PyInstaller'],
              binaries=[],
              datas=[],
              hiddenimports=[],
              hookspath=['e:\\anaconda3\\envs\\pyqt_database\\lib\\site-packages\\fbs\\freeze\\hooks'],
-             runtime_hooks=['D:\\Proiecte\\Python\\School Library Database\\target\\PyInstaller\\fbs_pyinstaller_hook.py'],
+             runtime_hooks=['D:\\Proiecte\\Python\\OLDI\\App\\target\\PyInstaller\\fbs_pyinstaller_hook.py'],
              excludes=[],
              win_no_prefer_redirects=False,
              win_private_assemblies=False,
@@ -26,7 +26,7 @@ exe = EXE(pyz,
           bootloader_ignore_signals=False,
           strip=False,
           upx=False,
-          console=False , icon='D:\\Proiecte\\Python\\School Library Database\\src\\main\\icons\\Icon.ico')
+          console=False , icon='D:\\Proiecte\\Python\\OLDI\\App\\src\\main\\icons\\Icon.ico')
 coll = COLLECT(exe,
                a.binaries,
                a.zipfiles,
