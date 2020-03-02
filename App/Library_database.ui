@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>466</width>
+    <height>518</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <widget class="QLabel" name="label">
+      <property name="text">
+       <string>Import Excel</string>
+      </property>
+      <property name="textFormat">
+       <enum>Qt::PlainText</enum>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="pushButton">
+      <property name="text">
+       <string>Choose File</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QComboBox" name="comboBox">
+      <property name="currentText">
+       <string>LIMBA SI LITERATURA. LINGVISTICA</string>
+      </property>
+      <property name="maxVisibleItems">
+       <number>15</number>
+      </property>
+      <item>
+       <property name="text">
+        <string>GENERALITATI</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>FILOSOFIE</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>RELIGIE. MITOLOGIE</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>STIINTE SOCIALE</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>CLASA LIBERA</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>STIINTE NATURALE</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>STIINTE APLICATE</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>ARTA. DISTRACTIE. SPORT</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>LIMBA SI LITERATURA. LINGVISTICA</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>ISTORIE. GEOGRAFIE</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>MANUALE</string>
+       </property>
+      </item>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>466</width>
+     <height>21</height>
+    </rect>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

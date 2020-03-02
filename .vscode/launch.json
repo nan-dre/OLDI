@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "cwd": "D:\\Proiecte\\Python\\OLDI"
+            "cwd": "{fileDirname}\\App"
         }
     ]
 }
