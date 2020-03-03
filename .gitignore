@@ -1,0 +1,3 @@
+*.pyc
+App/src/**
+App/target/**
