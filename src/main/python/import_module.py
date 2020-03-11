@@ -21,7 +21,6 @@ def excel_to_db(book, genre):
 
 def excel_import(database_path, excel_path, genre):
     #connect to database
-    conn = None
     try:
         con = sqlite3.connect(database_path)
     except Error as e:
