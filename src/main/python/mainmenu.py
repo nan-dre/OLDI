@@ -32,7 +32,7 @@ class OLDIContext(ApplicationContext):
         self.books_ui = self.get_resource(r'UIs\books.ui')
         self.students_ui = self.get_resource(r'UIs\students.ui')
         self.cur = self.db_connect
-        return MainWindow(self.ui, self.books_ui, self.students_ui., self.cur)
+        return MainWindow(self.ui, self.books_ui, self.students_ui, self.cur)
 
     @cached_property
     def db_connect(self):
@@ -107,6 +107,8 @@ class TableModel(QtCore.QAbstractTableModel):
         return len(self._data)
 
     def columnCount(self, index):
+        if self._data == []:
+            return 0
         return len(self._data[0])
 
  
@@ -127,26 +129,31 @@ class Books(QWidget):
 
         self.tableView.setHorizontalHeader(self.header)
         
+        for genre in self.get_genres():
+            self.genre_combobox.addItem(str(genre[0]) + ' ' + genre[1])
+        self.genre_combobox.setCurrentIndex(8)
 
         shortcut = QShortcut(QKeySequence("Return"), self)
         shortcut.activated.connect(lambda: self.query())
         self.search_button.pressed.connect(lambda: self.query())
 
     def query(self):
-        self.cur.execute("SELECT * FROM books WHERE title LIKE ? AND author LIKE ?",('%' + self.title_box.text() + '%' , '%' + self.name_box.text() + '%'))
+        index = self.genre_combobox.currentIndex()
+        self.cur.execute("SELECT * FROM books WHERE title LIKE ? AND author LIKE ? AND genre_id = ?",('%' + self.title_box.text() + '%' , '%' + self.name_box.text() + '%', index))
         data = self.cur.fetchall()
         if(data == []):
             print("No books found")
         else:
-            self.model = TableModel(data)
-            self.tableView.setModel(self.model)
+        self.model = TableModel(data)
+        self.tableView.setModel(self.model)
 
-    def get_columns(self):
+    def get_genres(self):
         self.cur.execute('SELECT * from genres')
+        return self.cur.fetchall()
 
 class Students(QLabel):
 
-    def __init__(self):
+    def __init__(self, ui, cur):
         super(Students, self).__init__()
         self.setAutoFillBackground(True)
 
