@@ -1,5 +1,5 @@
 from PyQt5 import uic, QtWidgets, QtCore
-from PyQt5.QtWidgets import QStackedLayout, QMainWindow, QWidget, QTabWidget, QPushButton, QLabel, QTableView, QShortcut
+from PyQt5.QtWidgets import QHeaderView, QStackedLayout, QMainWindow, QWidget, QTabWidget, QPushButton, QLabel, QTableView, QShortcut
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QKeySequence
 from fbs_runtime.application_context import cached_property
@@ -8,6 +8,21 @@ import sys
 import os
 import sqlite3
 
+'''
+TODO 
+implement ui for students tab
+implement ui for borrows
+create student add menu
+create borrow creation menu
+implement import excel tab
+implement database selection
+database backup
+create new db from template
+edit book
+edit borrow
+edit student
+'''
+
 
 class OLDIContext(ApplicationContext):
 
@@ -15,8 +30,9 @@ class OLDIContext(ApplicationContext):
     def window(self):
         self.ui = self.get_resource(r'UIs\main.ui')
         self.books_ui = self.get_resource(r'UIs\books.ui')
+        self.students_ui = self.get_resource(r'UIs\students.ui')
         self.cur = self.db_connect
-        return MainWindow(self.ui, self.books_ui, self.cur)
+        return MainWindow(self.ui, self.books_ui, self.students_ui., self.cur)
 
     @cached_property
     def db_connect(self):
@@ -31,77 +47,17 @@ class OLDIContext(ApplicationContext):
         self.window.show()
         return self.app.exec_
 
-class TableModel(QtCore.QAbstractTableModel):
-
-    def __init__(self, data):
-        super(TableModel, self).__init__()
-        self._data = data
-
-    def data(self, index, role):
-        if role == Qt.DisplayRole:
-            return self._data[index.row()][index.column()]
-
-    def rowCount(self, index):
-        return len(self._data)
-
-    def columnCount(self, index):
-        # The following takes the first sub-list, and returns
-        # the length (only works if all rows are an equal length)
-        return len(self._data[0])
-
- 
-class Books(QWidget):
-    def __init__(self, ui, cur):
-        super(Books, self).__init__()
-
-        uic.loadUi(ui, self)
-
-        self.cur = cur
-        cur.execute("SELECT * FROM book")
-        
-        self.model = TableModel(cur.fetchall())
-        self.tableView.setModel(self.model)
-
-        shortcut = QShortcut(QKeySequence("Return"), self)
-        shortcut.activated.connect(lambda: self.query())
-        self.search_button.pressed.connect(lambda: self.query())
-
-    def query(self):
-        self.cur.execute("SELECT * FROM book WHERE title LIKE ? AND author LIKE ?",('%' + self.title_box.text() + '%' , '%' + self.name_box.text() + '%'))
-        data = self.cur.fetchall()
-        if(data == []):
-            print("No books found")
-        else:
-            self.model = TableModel(data)
-            self.tableView.setModel(self.model)
-
-class Students(QLabel):
-
-    def __init__(self):
-        super(Students, self).__init__()
-        self.setAutoFillBackground(True)
-
-        self.setText("students")
-
-
-class Borrows(QLabel):
-
-    def __init__(self):
-        super(Borrows, self).__init__()
-        self.setAutoFillBackground(True)
-
-        self.setText("borrows")   
-
 class MainWindow(QMainWindow):
 
-    def __init__(self, ui, books_ui, cur):
+    def __init__(self, ui, books_ui, students_ui, cur):
         super(MainWindow, self).__init__()
         #uic.loadUi(ui, self)
         self.cur = cur
         self.books_ui = books_ui
+        self.students_ui = students_ui
         
 
-        cur.execute("SELECT * FROM borrow")
+        cur.execute("SELECT * FROM borrows")
         self.borrows_data = cur.fetchall()
 
 
@@ -126,7 +82,7 @@ class MainWindow(QMainWindow):
         borrows_btn.pressed.connect(lambda: layout.setCurrentIndex(2))
 
         layout.addWidget(Books(self.books_ui, self.cur))
-        layout.addWidget(Students())
+        layout.addWidget(Students(self.students_ui, self.cur))
         layout.addWidget(Borrows())
 
 
@@ -136,6 +92,76 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle('OLDI')
         self.showMaximized()
+
+class TableModel(QtCore.QAbstractTableModel):
+
+    def __init__(self, data):
+        super(TableModel, self).__init__()
+        self._data = data
+
+    def data(self, index, role):
+        if role == Qt.DisplayRole:
+            return self._data[index.row()][index.column()]
+
+    def rowCount(self, index):
+        return len(self._data)
+
+    def columnCount(self, index):
+        return len(self._data[0])
+
+ 
+class Books(QWidget):
+    def __init__(self, ui, cur):
+        super(Books, self).__init__()
+
+        uic.loadUi(ui, self)
+
+        self.cur = cur
+        cur.execute("SELECT * FROM books")
+        
+        self.model = TableModel(cur.fetchall())
+        self.tableView.setModel(self.model)
+
+        self.header = QHeaderView(Qt.Horizontal)
+        self.header.setSectionResizeMode(3)
+
+        self.tableView.setHorizontalHeader(self.header)
+        
+
+        shortcut = QShortcut(QKeySequence("Return"), self)
+        shortcut.activated.connect(lambda: self.query())
+        self.search_button.pressed.connect(lambda: self.query())
+
+    def query(self):
+        self.cur.execute("SELECT * FROM books WHERE title LIKE ? AND author LIKE ?",('%' + self.title_box.text() + '%' , '%' + self.name_box.text() + '%'))
+        data = self.cur.fetchall()
+        if(data == []):
+            print("No books found")
+        else:
+            self.model = TableModel(data)
+            self.tableView.setModel(self.model)
+
+    def get_columns(self):
+        self.cur.execute('SELECT * from genres')
+
+class Students(QLabel):
+
+    def __init__(self):
+        super(Students, self).__init__()
+        self.setAutoFillBackground(True)
+
+        self.setText("students")
+
+
+class Borrows(QLabel):
+
+    def __init__(self):
+        super(Borrows, self).__init__()
+        self.setAutoFillBackground(True)
+
+        self.setText("borrows")   
+
+
 
         
 

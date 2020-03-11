@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>967</width>
-    <height>499</height>
+    <width>753</width>
+    <height>300</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,49 +15,39 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <layout class="QHBoxLayout" name="menu_layout">
+    <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <widget class="QLabel" name="title_label">
-       <property name="text">
-        <string>Titlu</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLineEdit" name="title_box"/>
-     </item>
-     <item>
-      <widget class="QLabel" name="name_label">
+      <widget class="QLabel" name="label">
        <property name="text">
         <string>Nume</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="name_box"/>
+      <widget class="QLineEdit" name="lineEdit"/>
      </item>
      <item>
-      <widget class="QLabel" name="genre_label">
+      <widget class="QLabel" name="label_2">
        <property name="text">
-        <string>Gen</string>
+        <string>Prenume</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QComboBox" name="genre_combobox"/>
+      <widget class="QLineEdit" name="lineEdit_2"/>
      </item>
      <item>
-      <widget class="QLabel" name="status_label">
+      <widget class="QLabel" name="label_5">
        <property name="text">
-        <string>Status</string>
+        <string>Nr. telefon</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QComboBox" name="status_combobox"/>
+      <widget class="QLineEdit" name="lineEdit_3"/>
      </item>
      <item>
-      <widget class="QPushButton" name="search_button">
+      <widget class="QPushButton" name="pushButton">
        <property name="text">
         <string>Cauta</string>
        </property>
