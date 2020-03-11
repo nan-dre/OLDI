@@ -141,9 +141,6 @@ class Books(QWidget):
         index = self.genre_combobox.currentIndex()
         self.cur.execute("SELECT * FROM books WHERE title LIKE ? AND author LIKE ? AND genre_id = ?",('%' + self.title_box.text() + '%' , '%' + self.name_box.text() + '%', index))
         data = self.cur.fetchall()
-        if(data == []):
-            print("No books found")
-        else:
         self.model = TableModel(data)
         self.tableView.setModel(self.model)
 
@@ -151,14 +148,32 @@ class Books(QWidget):
         self.cur.execute('SELECT * from genres')
         return self.cur.fetchall()
 
-class Students(QLabel):
+class Students(QWidget):
 
     def __init__(self, ui, cur):
         super(Students, self).__init__()
         self.setAutoFillBackground(True)
+        self.cur = cur
+        
+        uic.loadUi(ui, self)
+        self.cur.execute("SELECT * FROM students")
 
-        self.setText("students")
+        self.model = TableModel(cur.fetchall())
+        self.tableView.setModel(self.model)
 
+        self.header = QHeaderView(Qt.Horizontal)
+        self.header.setSectionResizeMode(3)
+        self.tableView.setHorizontalHeader(self.header)
+
+        shortcut = QShortcut(QKeySequence("Return"), self)
+        shortcut.activated.connect(lambda: self.query())
+        self.search_button.pressed.connect(lambda: self.query())
+    
+    def query(self):
+        self.cur.execute("SELECT * FROM students WHERE first_name LIKE ? AND last_name LIKE ? AND phone LIKE ?", ('%' + self.firstname_box.text() + '%', '%' + self.lastname_box.text() + '%', '%' + self.phone_box.text() + '%'))
+        data = self.cur.fetchall()
+        self.model = TableModel(data)
+        self.tableView.setModel(self.model)
 
 class Borrows(QLabel):
 

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>753</width>
-    <height>300</height>
+    <width>675</width>
+    <height>316</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,35 +19,35 @@
      <item>
       <widget class="QLabel" name="label">
        <property name="text">
-        <string>Nume</string>
+        <string>ID elev</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="lastname_box"/>
+      <widget class="QLineEdit" name="lineEdit"/>
      </item>
      <item>
       <widget class="QLabel" name="label_2">
        <property name="text">
-        <string>Prenume</string>
+        <string>ID carte</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="firstname_box"/>
+      <widget class="QLineEdit" name="lineEdit_2"/>
      </item>
      <item>
-      <widget class="QLabel" name="label_5">
+      <widget class="QLabel" name="label_3">
        <property name="text">
-        <string>Nr. telefon</string>
+        <string>Data</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="phone_box"/>
+      <widget class="QLineEdit" name="lineEdit_3"/>
      </item>
      <item>
-      <widget class="QPushButton" name="search_button">
+      <widget class="QPushButton" name="pushButton">
        <property name="text">
         <string>Cauta</string>
        </property>
