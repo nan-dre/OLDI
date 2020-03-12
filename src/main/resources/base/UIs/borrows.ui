@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>675</width>
+    <width>650</width>
     <height>316</height>
    </rect>
   </property>
@@ -24,7 +24,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="lineEdit"/>
+      <widget class="QLineEdit" name="student_box"/>
      </item>
      <item>
       <widget class="QLabel" name="label_2">
@@ -34,20 +34,31 @@
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="lineEdit_2"/>
+      <widget class="QLineEdit" name="book_box"/>
      </item>
      <item>
-      <widget class="QLabel" name="label_3">
+      <widget class="QCheckBox" name="check_box">
        <property name="text">
         <string>Data</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="lineEdit_3"/>
+      <widget class="QDateEdit" name="date_edit">
+       <property name="dateTime">
+        <datetime>
+         <hour>0</hour>
+         <minute>0</minute>
+         <second>0</second>
+         <year>2000</year>
+         <month>1</month>
+         <day>1</day>
+        </datetime>
+       </property>
+      </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButton">
+      <widget class="QPushButton" name="search_button">
        <property name="text">
         <string>Cauta</string>
        </property>
