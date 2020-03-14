@@ -1,5 +1,5 @@
 from PyQt5 import uic, QtWidgets, QtCore
-from PyQt5.QtWidgets import QHeaderView, QStackedLayout, QMainWindow, QWidget, QTabWidget, QPushButton, QLabel, QTableView, QShortcut
+from PyQt5.QtWidgets import QTableWidget, QCompleter, QDialog, QHeaderView, QStackedLayout, QMainWindow, QWidget, QTabWidget, QPushButton, QLabel, QTableView, QShortcut
 from PyQt5.QtCore import Qt, QDate
 from PyQt5.QtGui import QKeySequence
 from fbs_runtime.application_context import cached_property
@@ -33,8 +33,10 @@ class OLDIContext(ApplicationContext):
         self.books_ui = self.get_resource(r'UIs\books.ui')
         self.students_ui = self.get_resource(r'UIs\students.ui')
         self.borrows_ui = self.get_resource(r'UIs\borrows.ui')
+        self.add_borrow_ui = self.get_resource(r'UIs\add_borrow.ui')
+        self.student_dialog = self.get_resource(r'UIs\student_dialog.ui')
         self.cur = self.db_connect
-        return MainWindow(self.ui, self.books_ui, self.students_ui, self.borrows_ui, self.cur)
+        return MainWindow(self.cur, self.ui, self.books_ui, self.students_ui, self.borrows_ui, self.add_borrow_ui, self.student_dialog)
 
     @cached_property
     def db_connect(self):
@@ -51,7 +53,7 @@ class OLDIContext(ApplicationContext):
 
 class MainWindow(QMainWindow):
 
-    def __init__(self, ui, books_ui, students_ui, borrows_ui, cur):
+    def __init__(self, cur, ui, books_ui, students_ui, borrows_ui, add_borrow_ui, student_dialog):
         super(MainWindow, self).__init__()
         uic.loadUi(ui, self)
 
@@ -61,29 +63,46 @@ class MainWindow(QMainWindow):
         self.books_ui = books_ui
         self.students_ui = students_ui
         self.borrows_ui = borrows_ui
+        self.add_borrow_ui = add_borrow_ui
+        self.student_dialog = student_dialog
+
+        self.add_borrow.triggered.connect(self.onMyToolBarButtonClick)
 
         self.pagelayout = self.centralwidget.layout()
-
         self.tabs_layout = QtWidgets.QStackedLayout()
-
         self.pagelayout.addLayout(self.tabs_layout)
 
         self.books_btn.pressed.connect(lambda: self.tabs_layout.setCurrentIndex(0))
         self.students_btn.pressed.connect(lambda: self.tabs_layout.setCurrentIndex(1))
         self.borrows_btn.pressed.connect(lambda: self.tabs_layout.setCurrentIndex(2))
 
-        self.tabs_layout.addWidget(Books(self.books_ui, self.cur))
-        self.tabs_layout.addWidget(Students(self.students_ui, self.cur))
-        self.tabs_layout.addWidget(Borrows(self.borrows_ui, self.cur))
+        self.tabs_layout.addWidget(Books(self.cur, self.books_ui))
+        self.tabs_layout.addWidget(Students(self.cur, self.students_ui, self.student_dialog))
+        self.tabs_layout.addWidget(Borrows(self.cur, self.borrows_ui))
+
+    def onMyToolBarButtonClick(self, s):
+        self.cur.execute("SELECT student_id, first_name, last_name, phone FROM students")
+        students = self.cur.fetchall()
+        students_data = {}
+        for student in students:
+            name = student[1] + ' ' + student[2] + ' ' + student[3]
+            students_data.update({student[0]:name})
+
+        print(students_data)
+        dlg = AddBorrow(self.add_borrow_ui, self.cur, students_data)
+        dlg.exec_()
 
         
+
+class Table(QTableWidget)
+
 
 class TableModel(QtCore.QAbstractTableModel):
 
     def __init__(self, data):
         super(TableModel, self).__init__()
         self._data = data
-
+        
     def data(self, index, role):
         if role == Qt.DisplayRole:
             return self._data[index.row()][index.column()]
@@ -98,7 +117,7 @@ class TableModel(QtCore.QAbstractTableModel):
 
  
 class Books(QWidget):
-    def __init__(self, ui, cur):
+    def __init__(self, cur, ui):
         super(Books, self).__init__()
         uic.loadUi(ui, self)
 
@@ -136,11 +155,12 @@ class Books(QWidget):
 
 class Students(QWidget):
 
-    def __init__(self, ui, cur):
+    def __init__(self, cur, students_ui, student_dialog):
         super(Students, self).__init__()
         self.cur = cur
-        
-        uic.loadUi(ui, self)
+        self.student_dialog = student_dialog
+        uic.loadUi(students_ui, self)
+    
         self.cur.execute("SELECT * FROM students")
         data = cur.fetchall()
 
@@ -160,10 +180,14 @@ class Students(QWidget):
         data = self.cur.fetchall()
         self.model = TableModel(data)
         self.tableView.setModel(self.model)
+    
+    def add_borrow(self, student_id):
+        dlg = StudentDialog(self, self.cur, self.student_dialog, student_id)
+        dlg.exec_()
 
 class Borrows(QWidget):
 
-    def __init__(self, ui, cur):
+    def __init__(self, cur, ui):
         super(Borrows, self).__init__()
         self.cur = cur
 
@@ -211,7 +235,32 @@ class Borrows(QWidget):
         self.model = TableModel(data)
         self.tableView.setModel(self.model)
 
+class StudentDialog(QDialog):
+    def __init__(self, cur, ui, student_id):
+        super(StudentDialog, self).__init__()
+        self.cur = cur
+        self.student_id = student_id
+        uic.loadUi(ui, self)
+        self.setWindowTitle("Elev")
 
+class AddBorrow(QDialog):
+    def __init__(self, cur, ui, data):
+        super(AddBorrow, self).__init__()
+        self.cur = cur
+        self.data = data
+        uic.loadUi(ui, self)
+        self.setWindowTitle("Inchiriere")
+
+        self.date_edit.setDisplayFormat('yyyy-MM-dd')
+        today_date = QDate.fromString(str(date.today()), 'yyyy-MM-dd')
+        self.date_edit.setDate(today_date)
+
+        completer = QCompleter(self.data)
+        self.name_box.setCompleter(completer)
+
+
+    def query():
+        pass
 
         
 

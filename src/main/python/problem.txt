@@ -1,1 +1,0 @@
-Hello, fellas, I'm building a GUI interface for a sqlite database, using PyQt5 and building it with fbs(in order to create a standalone app). I keep getting this really annoying problem: when launching the script, window appears 
