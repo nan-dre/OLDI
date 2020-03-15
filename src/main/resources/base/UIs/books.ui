@@ -69,13 +69,16 @@
     </layout>
    </item>
    <item>
-    <widget class="QTableView" name="tableView">
-     <property name="enabled">
+    <widget class="QTableWidget" name="table">
+     <property name="gridStyle">
+      <enum>Qt::SolidLine</enum>
+     </property>
+     <attribute name="horizontalHeaderCascadingSectionResizes">
+      <bool>false</bool>
+     </attribute>
+     <attribute name="horizontalHeaderStretchLastSection">
       <bool>true</bool>
-     </property>
-     <property name="sizeAdjustPolicy">
-      <enum>QAbstractScrollArea::AdjustToContents</enum>
-     </property>
+     </attribute>
     </widget>
    </item>
   </layout>

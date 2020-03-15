@@ -13,6 +13,7 @@ from datetime import date
 TODO 
 implement ui for students tab - check
 implement ui for borrows - check
+create student dialog - make dialog ui
 create student add menu
 create borrow creation menu
 implement import excel tab
@@ -36,15 +37,15 @@ class OLDIContext(ApplicationContext):
         self.add_borrow_ui = self.get_resource(r'UIs\add_borrow.ui')
         self.student_dialog = self.get_resource(r'UIs\student_dialog.ui')
         self.cur = self.db_connect
-        return MainWindow(self.cur, self.ui, self.books_ui, self.students_ui, self.borrows_ui, self.add_borrow_ui, self.student_dialog)
+        return MainWindow(self.con, self.cur, self.ui, self.books_ui, self.students_ui, self.borrows_ui, self.add_borrow_ui, self.student_dialog)
 
     @cached_property
     def db_connect(self):
         try:
-            con = sqlite3.connect(self.get_resource('DBs\Biblioteca.db'))
+            self.con = sqlite3.connect(self.get_resource('DBs\Biblioteca.db'))
         except Error as e:
             print(e)
-        return con.cursor()
+        return self.con.cursor()
         
     @cached_property
     def run_app(self):
@@ -53,17 +54,18 @@ class OLDIContext(ApplicationContext):
 
 class MainWindow(QMainWindow):
 
-    def __init__(self, cur, ui, books_ui, students_ui, borrows_ui, add_borrow_ui, student_dialog):
+    def __init__(self, con, cur, ui, books_ui, students_ui, borrows_ui, add_borrow_dialog, student_dialog):
         super(MainWindow, self).__init__()
         uic.loadUi(ui, self)
 
         self.setWindowTitle('OLDI')
         
+        self.con = con
         self.cur = cur
         self.books_ui = books_ui
         self.students_ui = students_ui
         self.borrows_ui = borrows_ui
-        self.add_borrow_ui = add_borrow_ui
+        self.add_borrow_dialog = add_borrow_dialog
         self.student_dialog = student_dialog
 
         self.add_borrow.triggered.connect(self.onMyToolBarButtonClick)
@@ -77,7 +79,7 @@ class MainWindow(QMainWindow):
         self.borrows_btn.pressed.connect(lambda: self.tabs_layout.setCurrentIndex(2))
 
         self.tabs_layout.addWidget(Books(self.cur, self.books_ui))
-        self.tabs_layout.addWidget(Students(self.cur, self.students_ui, self.student_dialog))
+        self.tabs_layout.addWidget(Students(self.con, self.cur, self.students_ui, self.student_dialog, self.add_borrow_dialog))
         self.tabs_layout.addWidget(Borrows(self.cur, self.borrows_ui))
 
     def onMyToolBarButtonClick(self, s):
@@ -92,9 +94,6 @@ class MainWindow(QMainWindow):
         dlg = AddBorrow(self.add_borrow_ui, self.cur, students_data)
         dlg.exec_()
 
-        
-
-class Table(QTableWidget)
 
 
 class TableModel(QtCore.QAbstractTableModel):
@@ -120,19 +119,16 @@ class Books(QWidget):
     def __init__(self, cur, ui):
         super(Books, self).__init__()
         uic.loadUi(ui, self)
-
         self.cur = cur
-        cur.execute("SELECT * FROM books")
+        self.cur.execute("SELECT * FROM books")
         data = cur.fetchall()
+        self.insert_data(data)
 
-        self.model = TableModel(data)
-        self.tableView.setModel(self.model)
 
-        self.header = QHeaderView(Qt.Horizontal)
-        self.header.setSectionResizeMode(3) #resize to column size
+        header = QHeaderView(Qt.Horizontal)
+        header.setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.table.setHorizontalHeader(header)
 
-        self.tableView.setHorizontalHeader(self.header)
-        
         for genre in self.get_genres():
             self.genre_combobox.addItem(str(genre[0]) + ' ' + genre[1])
         self.genre_combobox.setCurrentIndex(8)
@@ -145,45 +141,63 @@ class Books(QWidget):
         index = self.genre_combobox.currentIndex()
         self.cur.execute("SELECT * FROM books WHERE title LIKE ? AND author LIKE ? AND genre_id = ?",('%' + self.title_box.text() + '%' , '%' + self.name_box.text() + '%', index))
         data = self.cur.fetchall()
-
-        self.model = TableModel(data)
-        self.tableView.setModel(self.model)
+        self.insert_data(data)
+        print("done")
 
     def get_genres(self):
         self.cur.execute('SELECT * from genres')
         return self.cur.fetchall()
 
+    def insert_data(self, data):
+        self.table.setColumnCount(len(data[0]))
+        self.table.setRowCount(len(data))
+        for n, row in enumerate(data):
+            for i, cell in enumerate(row):
+                self.table.setItem(n, i, QtWidgets.QTableWidgetItem(str(cell)))
+
+
 class Students(QWidget):
 
-    def __init__(self, cur, students_ui, student_dialog):
+    def __init__(self, con, cur, students_ui, student_dialog, add_borrow_dialog):
         super(Students, self).__init__()
+        self.con = con
         self.cur = cur
         self.student_dialog = student_dialog
+        self.add_borrow_dialog = add_borrow_dialog
         uic.loadUi(students_ui, self)
     
         self.cur.execute("SELECT * FROM students")
         data = cur.fetchall()
 
-        self.model = TableModel(data)
-        self.tableView.setModel(self.model)
+        self.insert_data(data)
 
-        self.header = QHeaderView(Qt.Horizontal)
-        self.header.setSectionResizeMode(3)
-        self.tableView.setHorizontalHeader(self.header)
+        header = QHeaderView(Qt.Horizontal)
+        header.setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.table.setHorizontalHeader(header)
 
         shortcut = QShortcut(QKeySequence("Return"), self)
         shortcut.activated.connect(lambda: self.query())
         self.search_button.pressed.connect(lambda: self.query())
+
+        self.table.cellDoubleClicked.connect(self.open_dialog)
     
     def query(self):
         self.cur.execute("SELECT * FROM students WHERE first_name LIKE ? AND last_name LIKE ? AND phone LIKE ?", ('%' + self.firstname_box.text() + '%', '%' + self.lastname_box.text() + '%', '%' + self.phone_box.text() + '%'))
         data = self.cur.fetchall()
-        self.model = TableModel(data)
-        self.tableView.setModel(self.model)
+        self.insert_data(data)
     
-    def add_borrow(self, student_id):
-        dlg = StudentDialog(self, self.cur, self.student_dialog, student_id)
+    def open_dialog(self, row, column):
+
+        student_id = self.table.item(row, 0)
+        dlg = StudentDialog(self.con, self.cur, student_id.text(), self.student_dialog, self.add_borrow_dialog)
         dlg.exec_()
+
+    def insert_data(self, data):
+        self.table.setColumnCount(len(data[0]))
+        self.table.setRowCount(len(data))
+        for n, row in enumerate(data):
+            for i, cell in enumerate(row):
+                self.table.setItem(n, i, QtWidgets.QTableWidgetItem(str(cell)))
 
 class Borrows(QWidget):
 
@@ -195,12 +209,11 @@ class Borrows(QWidget):
         self.cur.execute("SELECT * FROM borrows")
         data = cur.fetchall()
 
-        self.model = TableModel(data)
-        self.tableView.setModel(self.model)
+        self.insert_data(data)
 
-        self.header = QHeaderView(Qt.Horizontal)
-        self.header.setSectionResizeMode(3)
-        self.tableView.setHorizontalHeader(self.header)
+        header = QHeaderView(Qt.Horizontal)
+        header.setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.table.setHorizontalHeader(header)
 
         shortcut = QShortcut(QKeySequence("Return"), self)
         shortcut.activated.connect(lambda: self.query())
@@ -232,36 +245,66 @@ class Borrows(QWidget):
                 self.cur.execute("SELECT * FROM borrows WHERE student_id = ?", student_id)
 
         data = self.cur.fetchall()
-        self.model = TableModel(data)
-        self.tableView.setModel(self.model)
+        self.insert_data(data)
+
+    def insert_data(self, data):
+        self.table.setColumnCount(len(data[0]))
+        self.table.setRowCount(len(data))
+        for n, row in enumerate(data):
+            for i, cell in enumerate(row):
+                self.table.setItem(n, i, QtWidgets.QTableWidgetItem(str(cell)))
+
 
 class StudentDialog(QDialog):
-    def __init__(self, cur, ui, student_id):
+    def __init__(self, con, cur, student_id, ui, add_borrow_dialog):
         super(StudentDialog, self).__init__()
+        self.con = con
         self.cur = cur
         self.student_id = student_id
+        self.add_borrow_dialog = add_borrow_dialog
         uic.loadUi(ui, self)
         self.setWindowTitle("Elev")
 
+        self.cur.execute("SELECT first_name, last_name, class_number, class_letter, phone, email FROM students WHERE student_id = ?", student_id)
+        data = cur.fetchone()
+        self.name_label.setText('<h1>' + ' '.join((data[0], data[1])) + '</h1>')
+        self.class_label.setText('<h2>' + ' '.join((str(data[2]), data[3])) + '<h2>')
+        self.phone_label.setText(data[4])
+        self.email_label.setText(data[5])
+
+        self.borrow_button.pressed.connect(self.add_borrow)
+
+    def add_borrow(self):
+        dlg = AddBorrow(self.con, self.cur, self.student_id, self.add_borrow_dialog)
+        dlg.exec()
+
 class AddBorrow(QDialog):
-    def __init__(self, cur, ui, data):
+    def __init__(self, con, cur, student_id, ui):
         super(AddBorrow, self).__init__()
+        self.con = con
         self.cur = cur
-        self.data = data
+        self.student_id = student_id
         uic.loadUi(ui, self)
         self.setWindowTitle("Inchiriere")
 
+        self.cur.execute("SELECT first_name, last_name FROM students WHERE student_id = ?", (self.student_id,))
+        name = ' '.join(cur.fetchone())
+        self.name_label.setText(name)
         self.date_edit.setDisplayFormat('yyyy-MM-dd')
         today_date = QDate.fromString(str(date.today()), 'yyyy-MM-dd')
         self.date_edit.setDate(today_date)
 
-        completer = QCompleter(self.data)
-        self.name_box.setCompleter(completer)
+        self.ok_button.pressed.connect(self.accept)
+        self.cancel_button.pressed.connect(self.reject)
 
 
-    def query():
-        pass
-
+    def accept(self):
+        date = self.date_edit.date()
+        student_id = self.student_id
+        book_id = self.book_box.text()
+        self.cur.execute("INSERT INTO borrows (date, student_id, book_id, status) VALUES(?,?,?,?)", (date.toString('yyyy-MM-dd'), int(student_id), int(book_id), "inchiriata"))
+        self.con.commit()
+        self.close()
         
 
 if __name__ == '__main__':  
