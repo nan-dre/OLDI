@@ -36,8 +36,9 @@ class OLDIContext(ApplicationContext):
         self.borrows_ui = self.get_resource(r'UIs\borrows.ui')
         self.add_borrow_ui = self.get_resource(r'UIs\add_borrow.ui')
         self.student_dialog = self.get_resource(r'UIs\student_dialog.ui')
+        self.borrow_dialog = self.get_resource(r'UIs\borrow_dialog.ui')
         self.cur = self.db_connect
-        return MainWindow(self.con, self.cur, self.ui, self.books_ui, self.students_ui, self.borrows_ui, self.add_borrow_ui, self.student_dialog)
+        return MainWindow(self.con, self.cur, self.ui, self.books_ui, self.students_ui, self.borrows_ui, self.add_borrow_ui, self.student_dialog, self.borrow_dialog)
 
     @cached_property
     def db_connect(self):
@@ -54,7 +55,7 @@ class OLDIContext(ApplicationContext):
 
 class MainWindow(QMainWindow):
 
-    def __init__(self, con, cur, ui, books_ui, students_ui, borrows_ui, add_borrow_dialog, student_dialog):
+    def __init__(self, con, cur, ui, books_ui, students_ui, borrows_ui, add_borrow_dialog, student_dialog, borrow_dialog):
         super(MainWindow, self).__init__()
         uic.loadUi(ui, self)
 
@@ -67,8 +68,7 @@ class MainWindow(QMainWindow):
         self.borrows_ui = borrows_ui
         self.add_borrow_dialog = add_borrow_dialog
         self.student_dialog = student_dialog
-
-        self.add_borrow.triggered.connect(self.onMyToolBarButtonClick)
+        self.borrow_dialog = borrow_dialog
 
         self.pagelayout = self.centralwidget.layout()
         self.tabs_layout = QtWidgets.QStackedLayout()
@@ -80,39 +80,27 @@ class MainWindow(QMainWindow):
 
         self.tabs_layout.addWidget(Books(self.cur, self.books_ui))
         self.tabs_layout.addWidget(Students(self.con, self.cur, self.students_ui, self.student_dialog, self.add_borrow_dialog))
-        self.tabs_layout.addWidget(Borrows(self.cur, self.borrows_ui))
-
-    def onMyToolBarButtonClick(self, s):
-        self.cur.execute("SELECT student_id, first_name, last_name, phone FROM students")
-        students = self.cur.fetchall()
-        students_data = {}
-        for student in students:
-            name = student[1] + ' ' + student[2] + ' ' + student[3]
-            students_data.update({student[0]:name})
-
-        print(students_data)
-        dlg = AddBorrow(self.add_borrow_ui, self.cur, students_data)
-        dlg.exec_()
+        self.tabs_layout.addWidget(Borrows(self.con, self.cur, self.borrows_ui, self.borrow_dialog))
 
 
 
-class TableModel(QtCore.QAbstractTableModel):
+# class TableModel(QtCore.QAbstractTableModel):
 
-    def __init__(self, data):
-        super(TableModel, self).__init__()
-        self._data = data
+#     def __init__(self, data):
+#         super(TableModel, self).__init__()
+#         self._data = data
         
-    def data(self, index, role):
-        if role == Qt.DisplayRole:
-            return self._data[index.row()][index.column()]
+#     def data(self, index, role):
+#         if role == Qt.DisplayRole:
+#             return self._data[index.row()][index.column()]
 
-    def rowCount(self, index):
-        return len(self._data)
+#     def rowCount(self, index):
+#         return len(self._data)
 
-    def columnCount(self, index):
-        if self._data == []:
-            return 0
-        return len(self._data[0])
+#     def columnCount(self, index):
+#         if self._data == []:
+#             return 0
+#         return len(self._data[0])
 
  
 class Books(QWidget):
@@ -201,11 +189,11 @@ class Students(QWidget):
 
 class Borrows(QWidget):
 
-    def __init__(self, cur, ui):
+    def __init__(self, con, cur, borrows_ui, borrow_dialog):
         super(Borrows, self).__init__()
         self.cur = cur
-
-        uic.loadUi(ui, self)
+        self.borrow_dialog = borrow_dialog
+        uic.loadUi(borrows_ui, self)
         self.cur.execute("SELECT * FROM borrows")
         data = cur.fetchall()
 
@@ -222,6 +210,8 @@ class Borrows(QWidget):
         self.date_edit.setDisplayFormat('yyyy-MM-dd')
         today_date = QDate.fromString(str(date.today()), 'yyyy-MM-dd')
         self.date_edit.setDate(today_date)
+
+        self.table.cellDoubleClicked.connect(self.open_dialog)
     
     def query(self):
         student_id = self.student_box.text()
@@ -253,6 +243,11 @@ class Borrows(QWidget):
         for n, row in enumerate(data):
             for i, cell in enumerate(row):
                 self.table.setItem(n, i, QtWidgets.QTableWidgetItem(str(cell)))
+
+    def open_dialog(self, row, column):
+        borrow_id = self.table.item(row, 0)
+        dlg = Borrow(self.borrow_dialog)
+        dlg.exec_()
 
 
 class StudentDialog(QDialog):
@@ -303,9 +298,14 @@ class AddBorrow(QDialog):
         student_id = self.student_id
         book_id = self.book_box.text()
         self.cur.execute("INSERT INTO borrows (date, student_id, book_id, status) VALUES(?,?,?,?)", (date.toString('yyyy-MM-dd'), int(student_id), int(book_id), "inchiriata"))
+        self.cur.execute("UPDATE books SET status = ? WHERE book_id = ?", (student_id, book_id))
         self.con.commit()
         self.close()
-        
+
+class Borrow(QDialog):
+    def __init__(self, ui):
+        super(Borrow, self).__init__()
+        uic.loadUi(ui, self)
 
 if __name__ == '__main__':  
     appctxt = OLDIContext()

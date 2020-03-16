@@ -70,6 +70,15 @@
    </item>
    <item>
     <widget class="QTableWidget" name="table">
+     <property name="editTriggers">
+      <set>QAbstractItemView::DoubleClicked</set>
+     </property>
+     <property name="tabKeyNavigation">
+      <bool>false</bool>
+     </property>
+     <property name="horizontalScrollMode">
+      <enum>QAbstractItemView::ScrollPerPixel</enum>
+     </property>
      <property name="gridStyle">
       <enum>Qt::SolidLine</enum>
      </property>
