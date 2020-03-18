@@ -1,6 +1,6 @@
 from PyQt5 import uic, QtWidgets, QtCore
 from PyQt5.QtWidgets import QTableWidget, QCompleter, QDialog, QHeaderView, QStackedLayout, QMainWindow, QWidget, QTabWidget, QPushButton, QLabel, QTableView, QShortcut
-from PyQt5.QtCore import Qt, QDate
+from PyQt5.QtCore import Qt, QDate, QPoint, QModelIndex
 from PyQt5.QtGui import QKeySequence
 from fbs_runtime.application_context import cached_property
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
@@ -14,6 +14,9 @@ TODO
 implement ui for students tab - check
 implement ui for borrows - check
 create student dialog - make dialog ui
+
+change query function for borrow
+
 create student add menu
 create borrow creation menu
 implement import excel tab
@@ -84,30 +87,35 @@ class MainWindow(QMainWindow):
 
 
 
-# class TableModel(QtCore.QAbstractTableModel):
+class TableModel(QtCore.QAbstractTableModel):
 
-#     def __init__(self, data):
-#         super(TableModel, self).__init__()
-#         self._data = data
+    def __init__(self, data):
+        super(TableModel, self).__init__()
+        self._data = data
         
-#     def data(self, index, role):
-#         if role == Qt.DisplayRole:
-#             return self._data[index.row()][index.column()]
+    def data(self, index, role):
+        if role == Qt.DisplayRole:
+            return self._data[index.row()][index.column()]
 
-#     def rowCount(self, index):
-#         return len(self._data)
+    def rowCount(self, index):
+        return len(self._data)
 
-#     def columnCount(self, index):
-#         if self._data == []:
-#             return 0
-#         return len(self._data[0])
+    def columnCount(self, index):
+        if self._data == []:
+            return 0
+        return len(self._data[0])
 
  
 class Books(QWidget):
     def __init__(self, cur, ui):
         super(Books, self).__init__()
         uic.loadUi(ui, self)
+
+        self.table = QTableView()
+        self.verticalLayout.addWidget(self.table)
+
         self.cur = cur
+        
         self.cur.execute("SELECT * FROM books")
         data = cur.fetchall()
         self.insert_data(data)
@@ -125,34 +133,44 @@ class Books(QWidget):
         shortcut.activated.connect(lambda: self.query())
         self.search_button.pressed.connect(lambda: self.query())
 
+
     def query(self):
         index = self.genre_combobox.currentIndex()
         self.cur.execute("SELECT * FROM books WHERE title LIKE ? AND author LIKE ? AND genre_id = ?",('%' + self.title_box.text() + '%' , '%' + self.name_box.text() + '%', index))
         data = self.cur.fetchall()
         self.insert_data(data)
-        print("done")
 
     def get_genres(self):
         self.cur.execute('SELECT * from genres')
         return self.cur.fetchall()
 
     def insert_data(self, data):
-        self.table.setColumnCount(len(data[0]))
-        self.table.setRowCount(len(data))
-        for n, row in enumerate(data):
-            for i, cell in enumerate(row):
-                self.table.setItem(n, i, QtWidgets.QTableWidgetItem(str(cell)))
+        # self.table.clearContents()
+        # self.table.setColumnCount(len(data[0]))
+        # self.table.setRowCount(len(data))
+        # for n, row in enumerate(data):
+        #     for i, cell in enumerate(row):
+        #         self.table.setItem(n, i, QtWidgets.QTableWidgetItem(str(cell)))
+
+        self.model = TableModel(data)
+        self.table.setModel(self.model)
+
 
 
 class Students(QWidget):
 
     def __init__(self, con, cur, students_ui, student_dialog, add_borrow_dialog):
         super(Students, self).__init__()
+
+        
         self.con = con
         self.cur = cur
         self.student_dialog = student_dialog
         self.add_borrow_dialog = add_borrow_dialog
         uic.loadUi(students_ui, self)
+
+        self.table = QTableView()
+        self.verticalLayout.addWidget(self.table)
     
         self.cur.execute("SELECT * FROM students")
         data = cur.fetchall()
@@ -167,35 +185,43 @@ class Students(QWidget):
         shortcut.activated.connect(lambda: self.query())
         self.search_button.pressed.connect(lambda: self.query())
 
-        self.table.cellDoubleClicked.connect(self.open_dialog)
+        self.table.doubleClicked.connect(self.open_dialog)
     
     def query(self):
         self.cur.execute("SELECT * FROM students WHERE first_name LIKE ? AND last_name LIKE ? AND phone LIKE ?", ('%' + self.firstname_box.text() + '%', '%' + self.lastname_box.text() + '%', '%' + self.phone_box.text() + '%'))
         data = self.cur.fetchall()
         self.insert_data(data)
     
-    def open_dialog(self, row, column):
-
-        student_id = self.table.item(row, 0)
-        dlg = StudentDialog(self.con, self.cur, student_id.text(), self.student_dialog, self.add_borrow_dialog)
+    def open_dialog(self, index):
+        student_id = self.model.index(index.row(), 0).data()
+        print(student_id)
+        dlg = StudentDialog(self.con, self.cur, student_id, self.student_dialog, self.add_borrow_dialog)
         dlg.exec_()
 
     def insert_data(self, data):
-        self.table.setColumnCount(len(data[0]))
-        self.table.setRowCount(len(data))
-        for n, row in enumerate(data):
-            for i, cell in enumerate(row):
-                self.table.setItem(n, i, QtWidgets.QTableWidgetItem(str(cell)))
+        # self.table.setColumnCount(len(data[0]))
+        # self.table.setRowCount(len(data))
+        # for n, row in enumerate(data):
+        #     for i, cell in enumerate(row):
+        #         self.table.setItem(n, i, QtWidgets.QTableWidgetItem(str(cell)))
+
+        self.model = TableModel(data)
+        self.table.setModel(self.model)
 
 class Borrows(QWidget):
 
     def __init__(self, con, cur, borrows_ui, borrow_dialog):
         super(Borrows, self).__init__()
+
+        
         self.cur = cur
         self.borrow_dialog = borrow_dialog
         uic.loadUi(borrows_ui, self)
         self.cur.execute("SELECT * FROM borrows")
         data = cur.fetchall()
+
+        self.table = QTableView()
+        self.verticalLayout.addWidget(self.table)
 
         self.insert_data(data)
 
@@ -211,7 +237,7 @@ class Borrows(QWidget):
         today_date = QDate.fromString(str(date.today()), 'yyyy-MM-dd')
         self.date_edit.setDate(today_date)
 
-        self.table.cellDoubleClicked.connect(self.open_dialog)
+        self.table.doubleClicked.connect(self.open_dialog)
     
     def query(self):
         student_id = self.student_box.text()
@@ -238,15 +264,19 @@ class Borrows(QWidget):
         self.insert_data(data)
 
     def insert_data(self, data):
-        self.table.setColumnCount(len(data[0]))
-        self.table.setRowCount(len(data))
-        for n, row in enumerate(data):
-            for i, cell in enumerate(row):
-                self.table.setItem(n, i, QtWidgets.QTableWidgetItem(str(cell)))
+        # self.table.setColumnCount(len(data[0]))
+        # self.table.setRowCount(len(data))
+        # for n, row in enumerate(data):
+        #     for i, cell in enumerate(row):
+        #         self.table.setItem(n, i, QtWidgets.QTableWidgetItem(str(cell)))
+        self.model = TableModel(data)
+        self.table.setModel(self.model)
 
-    def open_dialog(self, row, column):
-        borrow_id = self.table.item(row, 0)
-        dlg = Borrow(self.borrow_dialog)
+    def open_dialog(self, index):
+        pass
+        borrow_id = self.model.index(index.row(), 0).data()
+        print(borrow_id)
+        dlg = BorrowDialog(self.borrow_dialog)
         dlg.exec_()
 
 
@@ -260,7 +290,7 @@ class StudentDialog(QDialog):
         uic.loadUi(ui, self)
         self.setWindowTitle("Elev")
 
-        self.cur.execute("SELECT first_name, last_name, class_number, class_letter, phone, email FROM students WHERE student_id = ?", student_id)
+        self.cur.execute("SELECT first_name, last_name, class_number, class_letter, phone, email FROM students WHERE student_id = ?", (int(student_id),))
         data = cur.fetchone()
         self.name_label.setText('<h1>' + ' '.join((data[0], data[1])) + '</h1>')
         self.class_label.setText('<h2>' + ' '.join((str(data[2]), data[3])) + '<h2>')
@@ -302,9 +332,9 @@ class AddBorrow(QDialog):
         self.con.commit()
         self.close()
 
-class Borrow(QDialog):
+class BorrowDialog(QDialog):
     def __init__(self, ui):
-        super(Borrow, self).__init__()
+        super(BorrowDialog, self).__init__()
         uic.loadUi(ui, self)
 
 if __name__ == '__main__':  
