@@ -92,7 +92,7 @@ class TableModel(QtCore.QAbstractTableModel):
     def __init__(self, data):
         super(TableModel, self).__init__()
         self._data = data
-        
+
     def data(self, index, role):
         if role == Qt.DisplayRole:
             return self._data[index.row()][index.column()]
@@ -145,12 +145,6 @@ class Books(QWidget):
         return self.cur.fetchall()
 
     def insert_data(self, data):
-        # self.table.clearContents()
-        # self.table.setColumnCount(len(data[0]))
-        # self.table.setRowCount(len(data))
-        # for n, row in enumerate(data):
-        #     for i, cell in enumerate(row):
-        #         self.table.setItem(n, i, QtWidgets.QTableWidgetItem(str(cell)))
 
         self.model = TableModel(data)
         self.table.setModel(self.model)
@@ -199,11 +193,6 @@ class Students(QWidget):
         dlg.exec_()
 
     def insert_data(self, data):
-        # self.table.setColumnCount(len(data[0]))
-        # self.table.setRowCount(len(data))
-        # for n, row in enumerate(data):
-        #     for i, cell in enumerate(row):
-        #         self.table.setItem(n, i, QtWidgets.QTableWidgetItem(str(cell)))
 
         self.model = TableModel(data)
         self.table.setModel(self.model)
@@ -213,7 +202,7 @@ class Borrows(QWidget):
     def __init__(self, con, cur, borrows_ui, borrow_dialog):
         super(Borrows, self).__init__()
 
-        
+        self.con = con
         self.cur = cur
         self.borrow_dialog = borrow_dialog
         uic.loadUi(borrows_ui, self)
@@ -237,7 +226,7 @@ class Borrows(QWidget):
         today_date = QDate.fromString(str(date.today()), 'yyyy-MM-dd')
         self.date_edit.setDate(today_date)
 
-        self.table.doubleClicked.connect(self.open_dialog)
+        self.table.doubleClicked.connect(self.on_cell_double_click)
     
     def query(self):
         student_id = self.student_box.text()
@@ -264,20 +253,25 @@ class Borrows(QWidget):
         self.insert_data(data)
 
     def insert_data(self, data):
-        # self.table.setColumnCount(len(data[0]))
-        # self.table.setRowCount(len(data))
-        # for n, row in enumerate(data):
-        #     for i, cell in enumerate(row):
-        #         self.table.setItem(n, i, QtWidgets.QTableWidgetItem(str(cell)))
+        
         self.model = TableModel(data)
         self.table.setModel(self.model)
 
-    def open_dialog(self, index):
-        pass
+    def borrow_return(self, borrow_id):
+        self.cur.execute("UPDATE borrows SET status = ? WHERE borrow_id = ?", ("returnata", borrow_id))
+        self.cur.execute("SELECT book_id FROM borrows WHERE borrow_id =  ?", (borrow_id,))
+        book_id = self.cur.fetchone()[0]
+        print(book_id)
+        self.cur.execute("UPDATE books SET status = ? WHERE book_id = ?", ("libera", book_id))
+        self.con.commit()
+
+    def on_cell_double_click(self, index):
         borrow_id = self.model.index(index.row(), 0).data()
-        print(borrow_id)
-        dlg = BorrowDialog(self.borrow_dialog)
-        dlg.exec_()
+        if(index.column() == 4):
+            self.borrow_return(borrow_id)
+        else: 
+            dlg = BorrowDialog(self.borrow_dialog)
+            dlg.exec_()
 
 
 class StudentDialog(QDialog):
