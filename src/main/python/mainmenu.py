@@ -43,11 +43,11 @@ class OLDIContext(ApplicationContext):
         add_borrow_ui = self.get_resource(r'UIs\add_borrow.ui')
         student_dialog = self.get_resource(r'UIs\student_dialog.ui')
         borrow_dialog_ui = self.get_resource(r'UIs\borrow_dialog.ui')
-        book_dialog_ui = self.get_resource(r'UIs\book_dialog.ui')
+        borrow_edit_dialog_ui = self.get_resource(r'UIs\borrow_edit_dialog.ui')
         cur = self.db_connect
-        books_ui_list = (books_ui, book_dialog_ui)
+        books_ui_list = books_ui
         students_ui_list = (students_ui, student_dialog, add_borrow_ui)
-        borrows_ui_list = (borrows_ui, borrow_dialog_ui)
+        borrows_ui_list = (borrows_ui, borrow_dialog_ui, borrow_edit_dialog_ui)
 
         #return MainWindow(con, cur, ui, books_ui, students_ui, borrows_ui, add_borrow_ui, student_dialog, borrow_dialog_ui)
         return MainWindow(self.con, cur, ui, books_ui_list, students_ui_list, borrows_ui_list)
@@ -73,8 +73,7 @@ class MainWindow(QMainWindow):
         
         self.con = con
         self.cur = cur
-        self.books_ui = books_ui_list[0]
-        self.book_dialog_ui = books_ui_list[1]
+        self.books_ui = books_ui_list
         self.students_ui = students_ui_list[0]
         self.student_dialog = students_ui_list[1]
         self.add_borrow_dialog = students_ui_list[2]
@@ -89,7 +88,7 @@ class MainWindow(QMainWindow):
         self.students_btn.pressed.connect(lambda: self.tabs_layout.setCurrentIndex(1))
         self.borrows_btn.pressed.connect(lambda: self.tabs_layout.setCurrentIndex(2))
 
-        self.tabs_layout.addWidget(Books(self.cur, self.books_ui, self.book_dialog_ui))
+        self.tabs_layout.addWidget(Books(self.cur, self.books_ui))
         self.tabs_layout.addWidget(Students(self.con, self.cur, self.students_ui, self.student_dialog, self.add_borrow_dialog))
         self.tabs_layout.addWidget(Borrows(self.con, self.cur, self.borrows_ui, self.borrow_dialog_ui))
 
@@ -130,10 +129,9 @@ class TableView(QTableView):
 
  
 class Books(QWidget):
-    def __init__(self, cur, ui, book_dialog_ui):
+    def __init__(self, cur, ui):
         super(Books, self).__init__()
         uic.loadUi(ui, self)
-        self.book_dialog_ui = book_dialog_ui
 
         self.cur = cur
         
@@ -155,12 +153,10 @@ class Books(QWidget):
         shortcut.activated.connect(lambda: self.query())
         self.search_button.pressed.connect(lambda: self.query())
 
-        self.table.doubleClicked.connect(self.open_dialog)
-
-    def open_dialog(self, index):
-        book_id = self.model.index(index.row(), 0).data()
-        dlg = BookDialog(self.cur, book_id, self.book_dialog_ui)
-        dlg.exec_()
+    # def open_dialog(self, index):
+    #     book_id = self.model.index(index.row(), 0).data()
+    #     dlg = BookDialog(self.cur, book_id, self.book_dialog_ui)
+    #     dlg.exec_()
 
 
     def query(self):
@@ -296,12 +292,12 @@ class Borrows(QWidget):
             dlg = BorrowDialog(self.con, self.cur, borrow_id, self.borrow_dialog_ui)
             dlg.exec_()
 
-class BookDialog(QDialog):
-    def __init__(self, cur, book_id, ui):
-        super(BookDialog, self).__init__()
-        self.cur = cur
-        self.book_id = book_id
-        uic.loadUi(ui, self)
+# class BookDialog(QDialog):
+#     def __init__(self, cur, book_id, ui):
+#         super(BookDialog, self).__init__()
+#         self.cur = cur
+#         self.book_id = book_id
+#         uic.loadUi(ui, self)
 
 
 
