@@ -4,6 +4,7 @@ from PyQt5.QtCore import Qt, QDate, QPoint, QModelIndex
 from PyQt5.QtGui import QKeySequence
 from fbs_runtime.application_context import cached_property
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
+from fbs_runtime.platform import name
 import sys
 import os
 import sqlite3
@@ -36,14 +37,24 @@ class OLDIContext(ApplicationContext):
 
     @cached_property
     def window(self):
-        ui = self.get_resource(r'UIs\main.ui')
-        books_ui = self.get_resource(r'UIs\books.ui')
-        students_ui = self.get_resource(r'UIs\students.ui')
-        borrows_ui = self.get_resource(r'UIs\borrows.ui')
-        add_borrow_ui = self.get_resource(r'UIs\add_borrow.ui')
-        student_dialog = self.get_resource(r'UIs\student_dialog.ui')
-        borrow_dialog_ui = self.get_resource(r'UIs\borrow_dialog.ui')
-        borrow_edit_dialog_ui = self.get_resource(r'UIs\borrow_edit_dialog.ui')
+        if name() == 'Windows': # Windows file dir \
+            ui = self.get_resource(r'UIs\main.ui')
+            books_ui = self.get_resource(r'UIs\books.ui')
+            students_ui = self.get_resource(r'UIs\students.ui')
+            borrows_ui = self.get_resource(r'UIs\borrows.ui')
+            add_borrow_ui = self.get_resource(r'UIs\add_borrow.ui')
+            student_dialog = self.get_resource(r'UIs\student_dialog.ui')
+            borrow_dialog_ui = self.get_resource(r'UIs\borrow_dialog.ui')
+            borrow_edit_dialog_ui = self.get_resource(r'UIs\borrow_edit_dialog.ui')
+        else: # Linux file dir /
+            ui = self.get_resource(r'UIs/main.ui')
+            books_ui = self.get_resource(r'UIs/books.ui')
+            students_ui = self.get_resource(r'UIs/students.ui')
+            borrows_ui = self.get_resource(r'UIs/borrows.ui')
+            add_borrow_ui = self.get_resource(r'UIs/add_borrow.ui')
+            student_dialog = self.get_resource(r'UIs/student_dialog.ui')
+            borrow_dialog_ui = self.get_resource(r'UIs/borrow_dialog.ui')
+            borrow_edit_dialog_ui = self.get_resource(r'UIs/borrow_edit_dialog.ui')
         cur = self.db_connect
         books_ui_list = books_ui
         students_ui_list = (students_ui, student_dialog, add_borrow_ui)
@@ -55,7 +66,10 @@ class OLDIContext(ApplicationContext):
     @cached_property
     def db_connect(self):
         try:
-            self.con = sqlite3.connect(self.get_resource('DBs\Biblioteca.db'))
+            if name() == 'Windows':
+                self.con = sqlite3.connect(self.get_resource(r'DBs\Biblioteca.db'))
+            else:
+                self.con = sqlite3.connect(self.get_resource(r'DBs/Biblioteca.db'))
         except Error as e:
             print(e)
         return self.con.cursor()
