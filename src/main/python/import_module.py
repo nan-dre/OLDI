@@ -15,7 +15,7 @@ def excel_to_db(book, genre):
     else:
         author = ''
 
-    db_book = (book[4], book[2], author, book[3], book[5], book[6], genre, 0)
+    db_book = (book[4], book[2], author, book[3], book[5], book[6], genre, 'libera')
             #book_id, title, author, publishing, price, year, genre, status, borrow_id
     return db_book
 
@@ -33,7 +33,7 @@ def excel_import(database_path, excel_path, genre):
     ex_books = list(get_rows(ws))
     for ibx,book in enumerate(ex_books):
         if book[7] == 1:
-            c.execute("INSERT OR IGNORE INTO book VALUES(?,?,?,?,?,?,?,?);", excel_to_db(book, genre))
+            c.execute("INSERT OR IGNORE INTO books VALUES(?,?,?,?,?,?,?,?);", excel_to_db(book, genre))
             print(book[4])
     con.commit()
 

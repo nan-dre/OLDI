@@ -15,35 +15,42 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout">
-     <item>
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="0" column="0">
       <widget class="QLabel" name="label">
        <property name="text">
         <string>ID elev</string>
        </property>
       </widget>
      </item>
-     <item>
+     <item row="0" column="1" colspan="2">
       <widget class="QLineEdit" name="student_box"/>
      </item>
-     <item>
+     <item row="0" column="3">
       <widget class="QLabel" name="label_2">
        <property name="text">
         <string>ID carte</string>
        </property>
       </widget>
      </item>
-     <item>
+     <item row="0" column="4">
       <widget class="QLineEdit" name="book_box"/>
      </item>
-     <item>
-      <widget class="QCheckBox" name="check_box">
+     <item row="0" column="5">
+      <widget class="QPushButton" name="search_button">
+       <property name="text">
+        <string>Cauta</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0" colspan="2">
+      <widget class="QCheckBox" name="date_check_box">
        <property name="text">
         <string>Data</string>
        </property>
       </widget>
      </item>
-     <item>
+     <item row="1" column="2">
       <widget class="QDateEdit" name="date_edit">
        <property name="dateTime">
         <datetime>
@@ -57,11 +64,23 @@
        </property>
       </widget>
      </item>
-     <item>
-      <widget class="QPushButton" name="search_button">
-       <property name="text">
-        <string>Cauta</string>
-       </property>
+     <item row="1" column="4">
+      <widget class="QComboBox" name="filter_box">
+       <item>
+        <property name="text">
+         <string>Toate</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Inchiriate</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Returnate</string>
+        </property>
+       </item>
       </widget>
      </item>
     </layout>

@@ -51,21 +51,14 @@
      <height>20</height>
     </rect>
    </property>
-   <widget class="QMenu" name="menuEdit">
+   <widget class="QMenu" name="menuImport">
     <property name="title">
-     <string>Edit</string>
+     <string>Import</string>
     </property>
-    <addaction name="add_borrow"/>
-    <addaction name="add_student"/>
+    <addaction name="action_import_books"/>
+    <addaction name="action_import_students"/>
    </widget>
-   <widget class="QMenu" name="menuTools">
-    <property name="title">
-     <string>Tools</string>
-    </property>
-    <addaction name="actionImport_Excel"/>
-   </widget>
-   <addaction name="menuEdit"/>
-   <addaction name="menuTools"/>
+   <addaction name="menuImport"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionImport">
@@ -96,6 +89,36 @@
   <action name="add_borrow">
    <property name="text">
     <string>Adauga inchiriere...</string>
+   </property>
+  </action>
+  <action name="action_import_books">
+   <property name="icon">
+    <iconset>
+     <normaloff>../../../../../../../../Downloads/Book.png</normaloff>../../../../../../../../Downloads/Book.png</iconset>
+   </property>
+   <property name="text">
+    <string>Import carti...</string>
+   </property>
+   <property name="toolTip">
+    <string>Import carti</string>
+   </property>
+   <property name="statusTip">
+    <string>De aici poti importa un excel cu carti in baza de date</string>
+   </property>
+  </action>
+  <action name="action_import_students">
+   <property name="icon">
+    <iconset>
+     <normaloff>../../../../../../../../Downloads/student.png</normaloff>../../../../../../../../Downloads/student.png</iconset>
+   </property>
+   <property name="text">
+    <string>Import elevi...</string>
+   </property>
+   <property name="toolTip">
+    <string>Import elevi</string>
+   </property>
+   <property name="statusTip">
+    <string>De aici poti importa un excel cu elevi in baza de date</string>
    </property>
   </action>
  </widget>

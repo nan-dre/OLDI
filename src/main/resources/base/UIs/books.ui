@@ -57,7 +57,23 @@
       </widget>
      </item>
      <item>
-      <widget class="QComboBox" name="status_combobox"/>
+      <widget class="QComboBox" name="status_combobox">
+       <item>
+        <property name="text">
+         <string>Toate</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Inchiriate</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Neinchiriate</string>
+        </property>
+       </item>
+      </widget>
      </item>
      <item>
       <widget class="QPushButton" name="search_button">
