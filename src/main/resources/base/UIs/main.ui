@@ -13,6 +13,10 @@
   <property name="windowTitle">
    <string>OLDI</string>
   </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>../../../icons/base/Library.png</normaloff>../../../icons/base/Library.png</iconset>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="layout">
     <item>
@@ -58,7 +62,14 @@
     <addaction name="action_import_books"/>
     <addaction name="action_import_students"/>
    </widget>
+   <widget class="QMenu" name="menuSelect">
+    <property name="title">
+     <string>Select</string>
+    </property>
+    <addaction name="action_select_database"/>
+   </widget>
    <addaction name="menuImport"/>
+   <addaction name="menuSelect"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionImport">
@@ -119,6 +130,11 @@
    </property>
    <property name="statusTip">
     <string>De aici poti importa un excel cu elevi in baza de date</string>
+   </property>
+  </action>
+  <action name="action_select_database">
+   <property name="text">
+    <string>Select database...</string>
    </property>
   </action>
  </widget>

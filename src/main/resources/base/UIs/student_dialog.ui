@@ -13,6 +13,10 @@
   <property name="windowTitle">
    <string>Elev</string>
   </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>../../../icons/base/student.png</normaloff>../../../icons/base/student.png</iconset>
+  </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
     <layout class="QVBoxLayout" name="verticalLayout">

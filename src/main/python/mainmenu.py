@@ -1,6 +1,6 @@
 from PyQt5 import uic, QtWidgets, QtCore
 from PyQt5.QtWidgets import QFileDialog, QTableWidget, QCompleter, QDialog, QHeaderView, QStackedLayout, QMainWindow, QWidget, QTabWidget, QPushButton, QLabel, QTableView, QShortcut, QAction
-from PyQt5.QtCore import Qt, QDate, QPoint, QModelIndex
+from PyQt5.QtCore import Qt, QDate, QPoint, QModelIndex, QSettings
 from PyQt5.QtGui import QKeySequence, QColor
 from fbs_runtime.application_context import cached_property
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
@@ -67,14 +67,19 @@ class OLDIContext(ApplicationContext):
 
         #return MainWindow(con, cur, main_ui, books_ui, students_ui, borrows_ui, add_borrow_ui, student_dialog, borrow_dialog_ui)
         return MainWindow(self.con, cur, main_ui, books_ui_list, students_ui_list, borrows_ui_list, import_dialogs_ui_list)
-
+    
     @cached_property
     def db_connect(self):
+        
+        settings = QSettings("OLDI", "Nandre")
+        windows_db_path = settings.value("windows_db_path", self.get_resource(r'DBs\Biblioteca.db'))
+        linux_db_path = settings.value("linux_db_path", self.get_resource(r'DBs/Biblioteca.db'))
+        del settings
         try:
             if name() == 'Windows':
-                self.con = sqlite3.connect(self.get_resource(r'DBs\Biblioteca.db'))
+                self.con = sqlite3.connect(windows_db_path)
             else:
-                self.con = sqlite3.connect(self.get_resource(r'DBs/Biblioteca.db'))
+                self.con = sqlite3.connect(linux_db_path)
         except Error as e:
             print(e)
         return self.con.cursor()
@@ -108,6 +113,7 @@ class MainWindow(QMainWindow):
         self.students_btn.pressed.connect(lambda: self.tabs_layout.setCurrentIndex(1))
         self.borrows_btn.pressed.connect(lambda: self.tabs_layout.setCurrentIndex(2))
         self.action_import_books.triggered.connect(self.books_import_dialog)
+        self.action_select_database.triggered.connect(self.database_select_dialog)
 
         self.tabs_layout.addWidget(Books(self.cur, self.books_ui))
         self.tabs_layout.addWidget(Students(self.con, self.cur, self.students_ui, self.student_dialog, self.add_borrow_dialog))
@@ -116,7 +122,24 @@ class MainWindow(QMainWindow):
     def books_import_dialog(self, s):
         dlg = BooksImport(self.con, self.cur, self.books_import_dialog_ui)
         dlg.exec_()
-        
+    
+    def database_select_dialog(self, s):
+        options = QFileDialog.Options()
+        filename, _ = QFileDialog.getOpenFileName(self,"Import Excel", "","Database Files (*.db)", options=options)
+        settings = QSettings("OLDI", "Nandre")
+        try:
+            if name() == "Windows":
+                print(filename)
+                self.con = sqlite3.connect(filename)
+                settings.setValue("widnwos_db_path", filename)
+            elif name() == "Linux":
+                self.con == sqlit3.connect(filename)
+                settings.setValue("linux_db_path", filename)
+        except Error as e:
+            print(e)
+
+        del settings
+        self.cur = self.con.cursor()
         
 
 #------------------MODELS AND VIEWS--------------------
