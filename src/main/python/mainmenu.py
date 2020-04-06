@@ -33,21 +33,32 @@ create new db from template
 edit book
 edit student
 '''
+
 class Database():
-    def __init__(self, windows_default_db_path, linux_default_db_path):
-        self.windows_db_path = ''
-        self.linux_db_path = ''
-        self.windows_default_db_path = windows_default_db_path
-        self. linux_default_db_path = linux_default_db_path
-    def update(self):
+    def __init__(self):
+        # self.windows_default_db_path = windows_default_db_path
+        # self. linux_default_db_path = linux_default_db_path
+        self.con = None
+
+    def update(self, db_path):
         self.settings = QSettings("OLDI", "Nandre")
         if name() == 'Windows':
-                self.windows_db_path = self.settings.value("windows_db_path", self.windows_default_db_path)
-                self.con = sqlite3.connect(self.windows_db_path)
+            if self.con:
+                self.con.close()
+                self.con = None
+            self.con = sqlite3.connect(db_path)
+            self.settings.setValue("windows_db_path", db_path)
         else:
-            self.linux_db_path = self.settings.value("linux_db_path", self.linux_default_db_path)
-            self.con = sqlite3.connect(self.linux_db_path)
-        self.cur = self.con.cursor()
+            if self.con:
+                self.con.close()
+                self.con = None
+            self.con = sqlite3.connect(db_path)
+            self.settings.setValue("linux_db_path", db_path)
+    
+    def cursor(self):
+        if not self.con:
+            raise Exception("no db open")
+        return self.con.cursor()
 
 class OLDIContext(ApplicationContext):
 
@@ -74,48 +85,32 @@ class OLDIContext(ApplicationContext):
             borrow_dialog_ui = self.get_resource(r'UIs/borrow_dialog.ui')
             borrow_edit_dialog_ui = self.get_resource(r'UIs/borrow_edit_dialog.ui')
             books_import_dialog_ui = self.get_resource(r'UIs/books_import_dialog.ui')
-<<<<<<< HEAD
             restart_dialog_ui = self.get_resource(r'UIs/restart_dialog.ui')
-        cur = self.db_connect
-=======
-        windows_default_db_path = ''
-        linux_default_db_path = ''
-        if name() == 'Windows' :
-            windows_default_db_path = self.get_resource(r'DBs\Biblioteca.db')
-        if name() == 'Linux':
-            linux_default_db_path = self.get_resource(r'DBs/Biblioteca.db')
-        database = Database(windows_default_db_path, linux_default_db_path)
-        database.update()
-        con = database.con
-        cur = database.cur
-        
->>>>>>> 124a4581741ebecee9343080d9980a0d19191291
         books_ui_list = books_ui
         students_ui_list = (students_ui, student_dialog, add_borrow_ui)
         borrows_ui_list = (borrows_ui, borrow_dialog_ui, borrow_edit_dialog_ui)
         import_dialogs_ui_list = books_import_dialog_ui
-
-        #return MainWindow(con, cur, main_ui, books_ui, students_ui, borrows_ui, add_borrow_ui, student_dialog, borrow_dialog_ui)
-<<<<<<< HEAD
-        return MainWindow(self.con, cur, main_ui, restart_dialog_ui, books_ui_list, students_ui_list, borrows_ui_list, import_dialogs_ui_list)
-=======
-        return MainWindow(con, cur, main_ui, books_ui_list, students_ui_list, borrows_ui_list, import_dialogs_ui_list)
->>>>>>> 124a4581741ebecee9343080d9980a0d19191291
+        self.db_connect()
+        self.main_window = MainWindow(self.database, main_ui, restart_dialog_ui, books_ui_list, students_ui_list, borrows_ui_list, import_dialogs_ui_list)
+        #return MainWindow(database, main_ui, books_ui, students_ui, borrows_ui, add_borrow_ui, student_dialog, borrow_dialog_ui)
+        return self.main_window
     
-    @cached_property
     def db_connect(self):
         
+        self.database = Database()
         settings = QSettings("OLDI", "Nandre")
-        try:
-            if name() == 'Windows':
-                windows_db_path = settings.value("windows_db_path", self.get_resource(r'DBs\Biblioteca.db'))
-                self.con = sqlite3.connect(windows_db_path)
+        if name() == 'Windows':
+            db_path = settings.value("windows_db_path")
+            if db_path == None:
+                self.main_window.database_select_dialog("s")
             else:
-                linux_db_path = settings.value("linux_db_path", self.get_resource(r'DBs/Biblioteca.db'))
-                self.con = sqlite3.connect(linux_db_path)
-        except NameError as e:
-            print(e)
-        return self.con.cursor()
+                    self.database.update(db_path)
+        else:
+            db_path = settings.value("linux_db_path")
+            if db_path == None:
+                self.main_window.database_select_dialog("s")
+            else:
+                self.database.update(db_path)
         del settings
         
     @cached_property
@@ -125,12 +120,11 @@ class OLDIContext(ApplicationContext):
 
 class MainWindow(QMainWindow):
 
-    def __init__(self, con, cur, main_ui, restart_dialog_ui, books_ui_list, students_ui_list, borrows_ui_list, import_dialogs_ui_list):
+    def __init__(self, database, main_ui, restart_dialog_ui, books_ui_list, students_ui_list, borrows_ui_list, import_dialogs_ui_list):
         super(MainWindow, self).__init__()
         uic.loadUi(main_ui, self)
         
-        self.con = con
-        self.cur = cur
+        self.database = database
         self.restart_dialog_ui = restart_dialog_ui
         self.books_ui = books_ui_list
         self.students_ui = students_ui_list[0]
@@ -150,32 +144,30 @@ class MainWindow(QMainWindow):
         self.action_import_books.triggered.connect(self.books_import_dialog)
         self.action_select_database.triggered.connect(self.database_select_dialog)
 
-        self.tabs_layout.addWidget(Books(self.cur, self.books_ui))
-        self.tabs_layout.addWidget(Students(self.con, self.cur, self.students_ui, self.student_dialog, self.add_borrow_dialog))
-        self.tabs_layout.addWidget(Borrows(self.con, self.cur, self.borrows_ui, self.borrow_dialog_ui))
+        self.tabs_layout.addWidget(Books(self.database, self.books_ui))
+        self.tabs_layout.addWidget(Students(self.database, self.students_ui, self.student_dialog, self.add_borrow_dialog))
+        self.tabs_layout.addWidget(Borrows(self.database, self.borrows_ui, self.borrow_dialog_ui))
 
     def books_import_dialog(self, s):
-        dlg = BooksImport(self.con, self.cur, self.books_import_dialog_ui)
+        dlg = BooksImport(self.database, self.books_import_dialog_ui)
         dlg.exec_()
     
     def database_select_dialog(self, s):
         options = QFileDialog.Options()
-        filename, _ = QFileDialog.getOpenFileName(self,"Import Excel", "","Database Files (*.db)", options=options)
+        filename, _ = QFileDialog.getOpenFileName(self,"Select Database", "","Database Files (*.db)", options=options)
         settings = QSettings("OLDI", "Nandre")
         try:
             if name() == "Windows":
-                print(filename)
-                self.con = sqlite3.connect(filename)
                 settings.setValue("windows_db_path", filename)
+                self.database.update(filename)
+
             elif name() == "Linux":
-                self.con == sqlite3.connect(filename)
                 settings.setValue("linux_db_path", filename)
+                self.database.update(filename)
         except NameError as e:
             print(e)
 
         del settings
-        dlg = RestartDialog(self.restart_dialog_ui)
-        dlg.exec_()
         
         
 
@@ -246,14 +238,14 @@ class TableView(QTableView):
 #------------------WIDGETS------------------------------
 
 class Books(QWidget):
-    def __init__(self, cur, ui):
+    def __init__(self, database, ui):
         super(Books, self).__init__()
         uic.loadUi(ui, self)
 
-        self.cur = cur
-        
+        self.cur = database.cursor()
+        self.database = database
         self.cur.execute("SELECT * FROM books")
-        data = cur.fetchall()
+        data = self.cur.fetchall()
         self.columns = list(map(lambda x: x[0], self.cur.description))
         
         self.table = TableView(self.columns)
@@ -278,8 +270,9 @@ class Books(QWidget):
 
     def query(self):
         index = self.genre_combobox.currentIndex()
-        self.cur.execute("SELECT * FROM books WHERE title LIKE ? AND author LIKE ? AND genre_id = ?",('%' + self.title_box.text() + '%' , '%' + self.name_box.text() + '%', index))
-        data = self.cur.fetchall()
+        cur = self.database.cursor()
+        cur.execute("SELECT * FROM books WHERE title LIKE ? AND author LIKE ? AND genre_id = ?",('%' + self.title_box.text() + '%' , '%' + self.name_box.text() + '%', index))
+        data = cur.fetchall()
         self.insert_data(data)
 
     def get_genres(self):
@@ -295,12 +288,12 @@ class Books(QWidget):
 
 class Students(QWidget):
 
-    def __init__(self, con, cur, students_ui, student_dialog, add_borrow_dialog):
+    def __init__(self, database, students_ui, student_dialog, add_borrow_dialog):
         super(Students, self).__init__()
 
         
-        self.con = con
-        self.cur = cur
+        self.con = database.con
+        self.cur = database.cursor()
         self.student_dialog = student_dialog
         self.add_borrow_dialog = add_borrow_dialog
         uic.loadUi(students_ui, self)
@@ -308,7 +301,7 @@ class Students(QWidget):
         
     
         self.cur.execute("SELECT * FROM students")
-        data = cur.fetchall()
+        data = self.cur.fetchall()
         self.columns = list(map(lambda x: x[0], self.cur.description))
 
         self.table = TableView(self.columns)
@@ -328,7 +321,7 @@ class Students(QWidget):
     
     def open_dialog(self, index):
         student_id = self.model.index(index.row(), 0).data()
-        dlg = StudentDialog(self.con, self.cur, student_id, self.student_dialog, self.add_borrow_dialog)
+        dlg = StudentDialog(self.database, student_id, self.student_dialog, self.add_borrow_dialog)
         dlg.exec_()
 
     def insert_data(self, data):
@@ -338,15 +331,15 @@ class Students(QWidget):
 
 class Borrows(QWidget):
 
-    def __init__(self, con, cur, borrows_ui, borrow_dialog_ui):
+    def __init__(self, database, borrows_ui, borrow_dialog_ui):
         super(Borrows, self).__init__()
 
-        self.con = con
-        self.cur = cur
+        self.con = database.con
+        self.cur = database.cursor()
         self.borrow_dialog_ui = borrow_dialog_ui
         uic.loadUi(borrows_ui, self)
         self.cur.execute("SELECT * FROM borrows")
-        data = cur.fetchall()
+        data = self.cur.fetchall()
 
         self.columns = list(map(lambda x: x[0], self.cur.description))
 
@@ -441,16 +434,16 @@ class Borrows(QWidget):
         #if(index.column() == 4): # status column
         self.borrow_return(borrow_id)
         # else: 
-        #     dlg = BorrowDialog(self.con, self.cur, borrow_id, self.borrow_dialog_ui)
+        #     dlg = BorrowDialog(self.database, borrow_id, self.borrow_dialog_ui)
         #     dlg.exec_()
 
 #------------------DIALOGS--------------------------------
 
 class StudentDialog(QDialog):
-    def __init__(self, con, cur, student_id, ui, add_borrow_dialog):
+    def __init__(self, database, student_id, ui, add_borrow_dialog):
         super(StudentDialog, self).__init__()
-        self.con = con
-        self.cur = cur
+        self.con = database.con
+        self.cur = database.cursor()
         self.student_id = student_id
         self.add_borrow_dialog = add_borrow_dialog
         uic.loadUi(ui, self)
@@ -465,14 +458,14 @@ class StudentDialog(QDialog):
         self.borrow_button.pressed.connect(self.add_borrow)
 
     def add_borrow(self):
-        dlg = AddBorrow(self.con, self.cur, self.student_id, self.add_borrow_dialog)
+        dlg = AddBorrow(self.database, self.student_id, self.add_borrow_dialog)
         dlg.exec()
 
 class AddBorrow(QDialog):
-    def __init__(self, con, cur, student_id, ui):
+    def __init__(self, database, student_id, ui):
         super(AddBorrow, self).__init__()
-        self.con = con
-        self.cur = cur
+        self.con = database.con
+        self.cur = database.cursor()
         self.student_id = student_id
         uic.loadUi(ui, self)
 
@@ -499,10 +492,10 @@ class AddBorrow(QDialog):
         self.close()
 
 class BorrowDialog(QDialog):
-    def __init__(self, con, cur, borrow_id, ui):
+    def __init__(self, database, borrow_id, ui):
         super(BorrowDialog, self).__init__()
-        self.con = con
-        self.cur = cur
+        self.con = database.con
+        self.cur = database.cursor()
         self.borrow_id = borrow_id
         uic.loadUi(ui, self)
 
@@ -554,11 +547,11 @@ class BorrowDialog(QDialog):
         self.close()
 
 class BooksImport(QDialog):
-    def __init__(self, con, cur, ui):
+    def __init__(self, database, ui):
         super(BooksImport, self).__init__()
         uic.loadUi(ui, self)
-        self.con = con
-        self.cur = cur
+        self.con = database.con
+        self.cur = database.cursor()
         self.setWindowTitle("Import elevi")
 
         for genre in self.get_genres():

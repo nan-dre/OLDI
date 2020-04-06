@@ -27,3 +27,9 @@ I chose to use a local database, because I didn't really have a spare server to 
 # Building and installing
 
 # Features
+
+# What I have learned from this project
+* UI development
+* Basic oop usage and principles
+* Patterns like Dependecy Injection etc
+* Handling of big excel files, using the openpyxl module
