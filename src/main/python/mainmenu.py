@@ -49,6 +49,7 @@ class OLDIContext(ApplicationContext):
             borrow_dialog_ui = self.get_resource(r'UIs\borrow_dialog.ui')
             borrow_edit_dialog_ui = self.get_resource(r'UIs\borrow_edit_dialog.ui')
             books_import_dialog_ui = self.get_resource(r'UIs\books_import_dialog.ui')
+            restart_dialog_ui = self.get_resource(r'UIs\restart_dialog.ui')
         else: # Linux file dir /
             main_ui = self.get_resource(r'UIs/main.ui')
             books_ui = self.get_resource(r'UIs/books.ui')
@@ -59,6 +60,7 @@ class OLDIContext(ApplicationContext):
             borrow_dialog_ui = self.get_resource(r'UIs/borrow_dialog.ui')
             borrow_edit_dialog_ui = self.get_resource(r'UIs/borrow_edit_dialog.ui')
             books_import_dialog_ui = self.get_resource(r'UIs/books_import_dialog.ui')
+            restart_dialog_ui = self.get_resource(r'UIs/restart_dialog.ui')
         cur = self.db_connect
         books_ui_list = books_ui
         students_ui_list = (students_ui, student_dialog, add_borrow_ui)
@@ -66,7 +68,7 @@ class OLDIContext(ApplicationContext):
         import_dialogs_ui_list = books_import_dialog_ui
 
         #return MainWindow(con, cur, main_ui, books_ui, students_ui, borrows_ui, add_borrow_ui, student_dialog, borrow_dialog_ui)
-        return MainWindow(self.con, cur, main_ui, books_ui_list, students_ui_list, borrows_ui_list, import_dialogs_ui_list)
+        return MainWindow(self.con, cur, main_ui, restart_dialog_ui, books_ui_list, students_ui_list, borrows_ui_list, import_dialogs_ui_list)
     
     @cached_property
     def db_connect(self):
@@ -91,12 +93,13 @@ class OLDIContext(ApplicationContext):
 
 class MainWindow(QMainWindow):
 
-    def __init__(self, con, cur, main_ui, books_ui_list, students_ui_list, borrows_ui_list, import_dialogs_ui_list):
+    def __init__(self, con, cur, main_ui, restart_dialog_ui, books_ui_list, students_ui_list, borrows_ui_list, import_dialogs_ui_list):
         super(MainWindow, self).__init__()
         uic.loadUi(main_ui, self)
         
         self.con = con
         self.cur = cur
+        self.restart_dialog_ui = restart_dialog_ui
         self.books_ui = books_ui_list
         self.students_ui = students_ui_list[0]
         self.student_dialog = students_ui_list[1]
@@ -131,7 +134,7 @@ class MainWindow(QMainWindow):
             if name() == "Windows":
                 print(filename)
                 self.con = sqlite3.connect(filename)
-                settings.setValue("widnwos_db_path", filename)
+                settings.setValue("windows_db_path", filename)
             elif name() == "Linux":
                 self.con == sqlit3.connect(filename)
                 settings.setValue("linux_db_path", filename)
@@ -139,7 +142,9 @@ class MainWindow(QMainWindow):
             print(e)
 
         del settings
-        self.cur = self.con.cursor()
+        dlg = RestartDialog(self.restart_dialog_ui)
+        dlg.exec_()
+        
         
 
 #------------------MODELS AND VIEWS--------------------
@@ -559,6 +564,13 @@ class BooksImport(QDialog):
     def execute(self):
         excel_import(self.db_path, self.excel_path, self.genre_combobox.currentIndex())
         self.accept()
+
+class RestartDialog(QDialog):
+
+    def __init__(self, ui):
+        super(RestartDialog, self).__init__()
+        uic.loadUi(ui, self)
+        print(ui)
 
         
 #------------------MAIN--------------------------------------
