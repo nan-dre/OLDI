@@ -33,7 +33,21 @@ create new db from template
 edit book
 edit student
 '''
-
+class Database():
+    def __init__(self, windows_default_db_path, linux_default_db_path):
+        self.windows_db_path = ''
+        self.linux_db_path = ''
+        self.windows_default_db_path = windows_default_db_path
+        self. linux_default_db_path = linux_default_db_path
+    def update(self):
+        self.settings = QSettings("OLDI", "Nandre")
+        if name() == 'Windows':
+                self.windows_db_path = self.settings.value("windows_db_path", self.windows_default_db_path)
+                self.con = sqlite3.connect(self.windows_db_path)
+        else:
+            self.linux_db_path = self.settings.value("linux_db_path", self.linux_default_db_path)
+            self.con = sqlite3.connect(self.linux_db_path)
+        self.cur = self.con.cursor()
 
 class OLDIContext(ApplicationContext):
 
@@ -60,31 +74,49 @@ class OLDIContext(ApplicationContext):
             borrow_dialog_ui = self.get_resource(r'UIs/borrow_dialog.ui')
             borrow_edit_dialog_ui = self.get_resource(r'UIs/borrow_edit_dialog.ui')
             books_import_dialog_ui = self.get_resource(r'UIs/books_import_dialog.ui')
+<<<<<<< HEAD
             restart_dialog_ui = self.get_resource(r'UIs/restart_dialog.ui')
         cur = self.db_connect
+=======
+        windows_default_db_path = ''
+        linux_default_db_path = ''
+        if name() == 'Windows' :
+            windows_default_db_path = self.get_resource(r'DBs\Biblioteca.db')
+        if name() == 'Linux':
+            linux_default_db_path = self.get_resource(r'DBs/Biblioteca.db')
+        database = Database(windows_default_db_path, linux_default_db_path)
+        database.update()
+        con = database.con
+        cur = database.cur
+        
+>>>>>>> 124a4581741ebecee9343080d9980a0d19191291
         books_ui_list = books_ui
         students_ui_list = (students_ui, student_dialog, add_borrow_ui)
         borrows_ui_list = (borrows_ui, borrow_dialog_ui, borrow_edit_dialog_ui)
         import_dialogs_ui_list = books_import_dialog_ui
 
         #return MainWindow(con, cur, main_ui, books_ui, students_ui, borrows_ui, add_borrow_ui, student_dialog, borrow_dialog_ui)
+<<<<<<< HEAD
         return MainWindow(self.con, cur, main_ui, restart_dialog_ui, books_ui_list, students_ui_list, borrows_ui_list, import_dialogs_ui_list)
+=======
+        return MainWindow(con, cur, main_ui, books_ui_list, students_ui_list, borrows_ui_list, import_dialogs_ui_list)
+>>>>>>> 124a4581741ebecee9343080d9980a0d19191291
     
     @cached_property
     def db_connect(self):
         
         settings = QSettings("OLDI", "Nandre")
-        windows_db_path = settings.value("windows_db_path", self.get_resource(r'DBs\Biblioteca.db'))
-        linux_db_path = settings.value("linux_db_path", self.get_resource(r'DBs/Biblioteca.db'))
-        del settings
         try:
             if name() == 'Windows':
+                windows_db_path = settings.value("windows_db_path", self.get_resource(r'DBs\Biblioteca.db'))
                 self.con = sqlite3.connect(windows_db_path)
             else:
+                linux_db_path = settings.value("linux_db_path", self.get_resource(r'DBs/Biblioteca.db'))
                 self.con = sqlite3.connect(linux_db_path)
-        except Error as e:
+        except NameError as e:
             print(e)
         return self.con.cursor()
+        del settings
         
     @cached_property
     def run_app(self):
@@ -136,9 +168,9 @@ class MainWindow(QMainWindow):
                 self.con = sqlite3.connect(filename)
                 settings.setValue("windows_db_path", filename)
             elif name() == "Linux":
-                self.con == sqlit3.connect(filename)
+                self.con == sqlite3.connect(filename)
                 settings.setValue("linux_db_path", filename)
-        except Error as e:
+        except NameError as e:
             print(e)
 
         del settings
