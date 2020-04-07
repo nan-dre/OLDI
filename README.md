@@ -29,7 +29,9 @@ I chose to use a local database, because I didn't really have a spare server to 
 # Features
 
 # What I have learned from this project
+* Organizing of a book library data into an SQLite relational database
 * UI development
 * Basic oop usage and principles
 * Patterns like Dependecy Injection etc
 * Handling of big excel files, using the openpyxl module
+* Usage of python @property decorators
