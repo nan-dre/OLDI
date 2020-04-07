@@ -54,7 +54,7 @@ class Database():
                 self.con = None
             self.con = sqlite3.connect(db_path)
             self.settings.setValue("linux_db_path", db_path)
-    
+    @property
     def cursor(self):
         if not self.con:
             raise Exception("no db open")
@@ -242,7 +242,7 @@ class Books(QWidget):
         super(Books, self).__init__()
         uic.loadUi(ui, self)
 
-        self.cur = database.cursor()
+        self.cur = database.cursor
         self.database = database
         self.cur.execute("SELECT * FROM books")
         data = self.cur.fetchall()
@@ -270,7 +270,7 @@ class Books(QWidget):
 
     def query(self):
         index = self.genre_combobox.currentIndex()
-        cur = self.database.cursor()
+        cur = self.database.cursor
         cur.execute("SELECT * FROM books WHERE title LIKE ? AND author LIKE ? AND genre_id = ?",('%' + self.title_box.text() + '%' , '%' + self.name_box.text() + '%', index))
         data = cur.fetchall()
         self.insert_data(data)
@@ -291,9 +291,9 @@ class Students(QWidget):
     def __init__(self, database, students_ui, student_dialog, add_borrow_dialog):
         super(Students, self).__init__()
 
-        
+        self.database = database
         self.con = database.con
-        self.cur = database.cursor()
+        self.cur = database.cursor
         self.student_dialog = student_dialog
         self.add_borrow_dialog = add_borrow_dialog
         uic.loadUi(students_ui, self)
@@ -315,8 +315,9 @@ class Students(QWidget):
         self.table.doubleClicked.connect(self.open_dialog)
     
     def query(self):
-        self.cur.execute("SELECT * FROM students WHERE first_name LIKE ? AND last_name LIKE ? AND phone LIKE ?", ('%' + self.firstname_box.text() + '%', '%' + self.lastname_box.text() + '%', '%' + self.phone_box.text() + '%'))
-        data = self.cur.fetchall()
+        cur = self.database.cursor
+        cur.execute("SELECT * FROM students WHERE first_name LIKE ? AND last_name LIKE ? AND phone LIKE ?", ('%' + self.firstname_box.text() + '%', '%' + self.lastname_box.text() + '%', '%' + self.phone_box.text() + '%'))
+        data = cur.fetchall()
         self.insert_data(data)
     
     def open_dialog(self, index):
@@ -334,8 +335,9 @@ class Borrows(QWidget):
     def __init__(self, database, borrows_ui, borrow_dialog_ui):
         super(Borrows, self).__init__()
 
+        self.database = database
         self.con = database.con
-        self.cur = database.cursor()
+        self.cur = database.cursor
         self.borrow_dialog_ui = borrow_dialog_ui
         uic.loadUi(borrows_ui, self)
         self.cur.execute("SELECT * FROM borrows")
@@ -359,6 +361,7 @@ class Borrows(QWidget):
         self.table.doubleClicked.connect(self.on_cell_double_click)
     
     def query(self):
+        self.cur = self.database.cursor
         student_id = self.student_box.text()
         book_id = self.book_box.text()
         date = '%' + str(self.date_edit.date().toPyDate()) + '%'
@@ -423,6 +426,8 @@ class Borrows(QWidget):
 
 
     def borrow_return(self, borrow_id):
+        self.cur = self.database.cursor
+        self.con = self.database.con
         self.cur.execute("UPDATE borrows SET status = ? WHERE borrow_id = ?", (1, borrow_id))
         self.cur.execute("SELECT book_id FROM borrows WHERE borrow_id =  ?", (borrow_id,))
         book_id = self.cur.fetchone()[0]
@@ -443,7 +448,7 @@ class StudentDialog(QDialog):
     def __init__(self, database, student_id, ui, add_borrow_dialog):
         super(StudentDialog, self).__init__()
         self.con = database.con
-        self.cur = database.cursor()
+        self.cur = database.cursor
         self.student_id = student_id
         self.add_borrow_dialog = add_borrow_dialog
         uic.loadUi(ui, self)
@@ -465,7 +470,8 @@ class AddBorrow(QDialog):
     def __init__(self, database, student_id, ui):
         super(AddBorrow, self).__init__()
         self.con = database.con
-        self.cur = database.cursor()
+        self.cur = database.cursor
+        self.database = database
         self.student_id = student_id
         uic.loadUi(ui, self)
 
@@ -481,6 +487,7 @@ class AddBorrow(QDialog):
 
 
     def accept(self):
+        self.cur = self.database.cursor
         date = self.date_edit.date()
         due_date = date.addMonths(1)
         student_id = self.student_id
@@ -494,8 +501,9 @@ class AddBorrow(QDialog):
 class BorrowDialog(QDialog):
     def __init__(self, database, borrow_id, ui):
         super(BorrowDialog, self).__init__()
+        self.database = database
         self.con = database.con
-        self.cur = database.cursor()
+        self.cur = database.cursor
         self.borrow_id = borrow_id
         uic.loadUi(ui, self)
 
@@ -525,6 +533,8 @@ class BorrowDialog(QDialog):
         self.cancel_button.pressed.connect(self.reject)
 
     def accept(self):
+        self.cur = self.database.cursor
+        
         index = self.status_box.currentIndex()
         if index == 0:
             status = 0
@@ -551,7 +561,7 @@ class BooksImport(QDialog):
         super(BooksImport, self).__init__()
         uic.loadUi(ui, self)
         self.con = database.con
-        self.cur = database.cursor()
+        self.cur = database.cursor
         self.setWindowTitle("Import elevi")
 
         for genre in self.get_genres():
