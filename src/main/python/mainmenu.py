@@ -73,19 +73,20 @@ class OLDIContext(ApplicationContext):
         students_ui_list = (students_ui, student_dialog, add_borrow_ui)
         borrows_ui_list = (borrows_ui, borrow_dialog_ui, borrow_edit_dialog_ui)
         import_dialogs_ui_list = books_import_dialog_ui
-        self.main_window = MainWindow(self.db_connect, main_ui, restart_dialog_ui, books_ui_list, students_ui_list, borrows_ui_list, import_dialogs_ui_list)
+        self.db_connect()
+        self.main_window = MainWindow(self.database, main_ui, restart_dialog_ui, books_ui_list, students_ui_list, borrows_ui_list, import_dialogs_ui_list)
         #return MainWindow(database, main_ui, books_ui, students_ui, borrows_ui, add_borrow_ui, student_dialog, borrow_dialog_ui)
         return self.main_window
     
-    @cached_property
     def db_connect(self):
         
         self.database = Database()
         settings = QSettings("OLDI", "Nandre")
+        #settings.setValue("windows_db_path", r'D:\Proiecte\Python\OLDI\src\main\resources\base\DBs\Biblioteca.db')
         if name() == 'Windows':
             db_path = settings.value("windows_db_path")
             if db_path == None:
-                self.window.database_select_dialog("s")
+                self.main_window.database_select_dialog("s")
             else:
                     self.database.update(db_path)
         else:
@@ -95,7 +96,6 @@ class OLDIContext(ApplicationContext):
             else:
                 self.database.update(db_path)
         del settings
-        return self.database
         
     @cached_property
     def run_app(self):
