@@ -13,25 +13,8 @@ from datetime import date
 from import_module import excel_import
 
 '''
-TODO 
-implement ui for students tab - check
-implement ui for borrows - check
-create student dialog - make dialog ui
-
-make join between books and borrows table
-make gui look better
-- color code borrows
-- table stretch over space
-- bigger fonts
-- stylesheets maybe
-
-create student add menu
-implement import excel tab
-implement database selection
-database backup
-create new db from template
-edit book
-edit student
+TODO
+programatically create database template 
 '''
 
 class Database():
@@ -90,11 +73,11 @@ class OLDIContext(ApplicationContext):
         students_ui_list = (students_ui, student_dialog, add_borrow_ui)
         borrows_ui_list = (borrows_ui, borrow_dialog_ui, borrow_edit_dialog_ui)
         import_dialogs_ui_list = books_import_dialog_ui
-        self.db_connect()
-        self.main_window = MainWindow(self.database, main_ui, restart_dialog_ui, books_ui_list, students_ui_list, borrows_ui_list, import_dialogs_ui_list)
+        self.main_window = MainWindow(self.db_connect, main_ui, restart_dialog_ui, books_ui_list, students_ui_list, borrows_ui_list, import_dialogs_ui_list)
         #return MainWindow(database, main_ui, books_ui, students_ui, borrows_ui, add_borrow_ui, student_dialog, borrow_dialog_ui)
         return self.main_window
     
+    @cached_property
     def db_connect(self):
         
         self.database = Database()
@@ -102,7 +85,7 @@ class OLDIContext(ApplicationContext):
         if name() == 'Windows':
             db_path = settings.value("windows_db_path")
             if db_path == None:
-                self.main_window.database_select_dialog("s")
+                self.window.database_select_dialog("s")
             else:
                     self.database.update(db_path)
         else:
@@ -112,6 +95,7 @@ class OLDIContext(ApplicationContext):
             else:
                 self.database.update(db_path)
         del settings
+        return self.database
         
     @cached_property
     def run_app(self):
@@ -144,9 +128,23 @@ class MainWindow(QMainWindow):
         self.action_import_books.triggered.connect(self.books_import_dialog)
         self.action_select_database.triggered.connect(self.database_select_dialog)
 
-        self.tabs_layout.addWidget(Books(self.database, self.books_ui))
-        self.tabs_layout.addWidget(Students(self.database, self.students_ui, self.student_dialog, self.add_borrow_dialog))
-        self.tabs_layout.addWidget(Borrows(self.database, self.borrows_ui, self.borrow_dialog_ui))
+        self.books = Books(self.database, self.books_ui)
+        self.students = Students(self.database, self.students_ui, self.student_dialog, self.add_borrow_dialog)
+        self.borrows = Borrows(self.database, self.borrows_ui, self.borrow_dialog_ui)
+        
+        self.tabs_layout.addWidget(self.books)
+        self.tabs_layout.addWidget(self.students)
+        self.tabs_layout.addWidget(self.borrows)
+
+        self.tabs_layout.currentChanged.connect(self.tab_changed)
+
+    def tab_changed(self, index):
+        if index == 0:
+            self.books.query()
+        elif index == 1:
+            self.students.query()
+        elif index == 2:
+            self.borrows.query()
 
     def books_import_dialog(self, s):
         dlg = BooksImport(self.database, self.books_import_dialog_ui)
@@ -168,9 +166,7 @@ class MainWindow(QMainWindow):
             print(e)
 
         del settings
-        
-        
-
+    
 #------------------MODELS AND VIEWS--------------------
 
 class TableModel(QtCore.QAbstractTableModel):
@@ -281,10 +277,7 @@ class Books(QWidget):
 
     def insert_data(self, data):
         self.model = TableModel(data, self.columns, "books")
-        self.table.setModel(self.model)
-        
-        
-            
+        self.table.setModel(self.model)    
 
 class Students(QWidget):
 
@@ -433,6 +426,7 @@ class Borrows(QWidget):
         book_id = self.cur.fetchone()[0]
         self.cur.execute("UPDATE books SET status = ? WHERE book_id = ?", ("libera", book_id))
         self.con.commit()
+        self.query()
 
     def on_cell_double_click(self, index):
         borrow_id = self.model.index(index.row(), 0).data()
@@ -606,8 +600,7 @@ class RestartDialog(QDialog):
         super(RestartDialog, self).__init__()
         uic.loadUi(ui, self)
         print(ui)
-
-        
+     
 #------------------MAIN--------------------------------------
 
 if __name__ == '__main__':  
