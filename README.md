@@ -2,7 +2,7 @@
 
 OLDI - Open library database interface is a sqlite3 database managing GUI, aimed at increasing productivity and reliability for school libraries.
 
-OLDI is written in python with the help of the sqlite3 and PyQt5 libraries. The database is stored locally, with the option to upload backup versions of it to Google Drive.
+OLDI is written in python with the help of the sqlite3 and PyQt5 libraries. The database is stored locally.
 
 # Reasons I made this
 
@@ -28,12 +28,16 @@ Fbs is a Python-based build tool for PyQt. I hade a breakthrough when I found th
 # Usage
 The app consists of 3 main tabs: books, students and borrows.
 
+![Books tab](https://github.com/nan-dre/OLDI/blob/master/Pictures/Books.png)
 The books tab is just a list with all the books available in the database, color-coded with green/red if they are available or not.
 
+![Students tab](https://github.com/nan-dre/OLDI/blob/master/Pictures/Students.png)
 The students tab contains the students list. Double-clicking a student reveals more information about him and a way for him to borrow a book. Just fill in the book number and a coresponding borrow is created.
 
+![Borrows tab](https://github.com/nan-dre/OLDI/blob/master/Pictures/Borrows.png)
 The borrows tab contains the list with all the borrows. Double-clicking a borrow will mark the coresponding book as returned.
 
+Each tab has searching and filtering capabilities, in order for the librarian to find the information she needs.
 
 # Features
 * Intuitive and minimalistic UI
