@@ -17,16 +17,28 @@ I chose to use a local database, because I didn't really have a spare server to 
 > For device-local storage with low writer concurrency and less than a terabyte of content, SQLite is almost always a better solution. SQLite is fast and reliable and it requires no configuration or maintenance. It keeps things simple. SQLite "just works". 
 
 ## DB-Api
+DB-Api is a standard interface for Python database acces modules. This is what I use to talk from python to the sqlite database
 
 ## PyQt
+PyQt is a python binding for the popular Qt cross-platform C++ GUI framework. This is what I used to design the User Interface, together with the Qt Designer app easily create custom widget using drag and drop default widgets.
 
 ## fbs
+Fbs is a Python-based build tool for PyQt. I hade a breakthrough when I found that I could so easily package my python app into a standalone .exe installer. Neat stuff!
 
 # Usage
+The app consists of 3 main tabs: books, students and borrows.
 
-# Building and installing
+The books tab is just a list with all the books available in the database, color-coded with green/red if they are available or not.
+
+The students tab contains the students list. Double-clicking a student reveals more information about him and a way for him to borrow a book. Just fill in the book number and a coresponding borrow is created.
+
+The borrows tab contains the list with all the borrows. Double-clicking a borrow will mark the coresponding book as returned.
+
 
 # Features
+* Intuitive and minimalistic UI
+* Fast database queries, even for lots of entries
+* Capability to import excel files into the sqlite database
 
 # What I have learned from this project
 * Organizing of a book library data into an SQLite relational database
