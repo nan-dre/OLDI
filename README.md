@@ -23,7 +23,7 @@ DB-Api is a standard interface for Python database acces modules. This is what I
 PyQt is a python binding for the popular Qt cross-platform C++ GUI framework. This is what I used to design the User Interface, together with the Qt Designer app easily create custom widget using drag and drop default widgets.
 
 ## fbs
-Fbs is a Python-based build tool for PyQt. I hade a breakthrough when I found that I could so easily package my python app into a standalone .exe installer. Neat stuff!
+Fbs is a Python-based build tool for PyQt. I hade a breakthrough when I found that I could so easily package my python app into a Windows standalone .exe installer or a Linux .deb file. Neat stuff!
 
 # Usage
 The app consists of 3 main tabs: books, students and borrows.
