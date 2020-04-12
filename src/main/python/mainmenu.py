@@ -5,17 +5,13 @@ from PyQt5.QtGui import QKeySequence, QColor
 from fbs_runtime.application_context import cached_property
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
 from fbs_runtime.platform import name
-import sys
-import os
 import sqlite3
 from datetime import date
+import shutil
+import os
+from pathlib import Path
 
 from import_module import excel_import
-
-'''
-TODO
-programatically create database template 
-'''
 
 class Database():
     def __init__(self):
@@ -58,6 +54,7 @@ class OLDIContext(ApplicationContext):
             borrow_edit_dialog_ui = self.get_resource(r'UIs\borrow_edit_dialog.ui')
             books_import_dialog_ui = self.get_resource(r'UIs\books_import_dialog.ui')
             restart_dialog_ui = self.get_resource(r'UIs\restart_dialog.ui')
+            self.backup_dir = self.get_resource(r'Backups\.backup_dir')
         else: # Linux file dir /
             main_ui = self.get_resource(r'UIs/main.ui')
             books_ui = self.get_resource(r'UIs/books.ui')
@@ -69,6 +66,7 @@ class OLDIContext(ApplicationContext):
             borrow_edit_dialog_ui = self.get_resource(r'UIs/borrow_edit_dialog.ui')
             books_import_dialog_ui = self.get_resource(r'UIs/books_import_dialog.ui')
             restart_dialog_ui = self.get_resource(r'UIs/restart_dialog.ui')
+            self.backup_dir = self.get_resource(r'Backups/.backup_dir')
         books_ui_list = books_ui
         students_ui_list = (students_ui, student_dialog, add_borrow_ui)
         borrows_ui_list = (borrows_ui, borrow_dialog_ui, borrow_edit_dialog_ui)
@@ -117,13 +115,30 @@ class OLDIContext(ApplicationContext):
         cur = conn.cursor()
         cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='books';")
         ok = cur.fetchone()
-        print(ok)
         return ok
 
+    def backup_check(self):
+        settings = QSettings("OLDI", "Nandre")
+        today = date.today()
+        last_backup_date = settings.value("last_backup_date", today)
+        difference = (today - last_backup_date).days
+        if difference < 7:
+            self.backup()
+
+    def backup(self):
+        settings = QSettings("OLDI", "Nandre")
+        today = date.today()
+        if name() == 'Windows':
+            db_path = Path(settings.value("windows_db_path"))
+            backup_dir = Path(self.backup_dir)
+            backup_dir = backup_dir.parent
+            backup_path = os.path.join(backup_dir, ''.join([db_path.stem, str(today), db_path.suffix]))
+            shutil.copy2(db_path, backup_path)
 
     @cached_property
     def run_app(self):
         self.window.show()
+        self.backup_check()
         return self.app.exec_
 
 class MainWindow(QMainWindow):
@@ -442,7 +457,6 @@ class Borrows(QWidget):
         self.cur = self.database.cursor
         self.con = self.database.con
         current_date = str(date.today())
-        print(current_date)
         self.cur.execute("UPDATE borrows SET status = ?, return_date = ? WHERE borrow_id = ?", (1, current_date, borrow_id))
         self.cur.execute("SELECT book_id FROM borrows WHERE borrow_id =  ?", (borrow_id,))
         book_id = self.cur.fetchone()[0]
@@ -615,13 +629,6 @@ class BooksImport(QDialog):
     def execute(self):
         excel_import(self.db_path, self.excel_path, self.genre_combobox.currentIndex())
         self.accept()
-
-class RestartDialog(QDialog):
-
-    def __init__(self, ui):
-        super(RestartDialog, self).__init__()
-        uic.loadUi(ui, self)
-        print(ui)
      
 #------------------MAIN--------------------------------------
 

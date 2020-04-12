@@ -10,6 +10,7 @@ import os
 import sqlite3
 from datetime import date
 
+
 from import_module import excel_import
 
 
@@ -39,7 +40,6 @@ class OLDIContext(ApplicationContext):
     
     @cached_property
     def database(self):
-        
         database = Database()
         settings = QSettings("OLDI", "Nandre")
         #settings.setValue("windows_db_path", r'D:\Proiecte\Python\OLDI\src\main\resources\base\DBs\Biblioteca.db')
