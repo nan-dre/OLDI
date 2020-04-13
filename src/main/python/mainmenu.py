@@ -272,7 +272,6 @@ class Books(QWidget):
     def __init__(self, database, ui):
         super(Books, self).__init__()
         uic.loadUi(ui, self)
-
         self.cur = database.cursor
         self.database = database
         self.cur.execute("SELECT * FROM books")
@@ -281,7 +280,8 @@ class Books(QWidget):
         
         self.table = TableView(self.columns)
         self.verticalLayout.addWidget(self.table)
-        
+        self.set_status_tip()
+
         self.insert_data(data)
 
         for genre in self.get_genres():
@@ -312,7 +312,10 @@ class Books(QWidget):
 
     def insert_data(self, data):
         self.model = TableModel(data, self.columns, "books")
-        self.table.setModel(self.model)    
+        self.table.setModel(self.model)
+
+    def set_status_tip(self):
+        self.table.setStatusTip("Lista cu cartile. Rosu - inchiriata, Verde - disponibila")    
 
 class Students(QWidget):
 
@@ -335,6 +338,7 @@ class Students(QWidget):
         self.table = TableView(self.columns)
         self.verticalLayout.addWidget(self.table)
         self.insert_data(data)
+        self.set_status_tip()
 
         shortcut = QShortcut(QKeySequence("Return"), self)
         shortcut.activated.connect(lambda: self.query())
@@ -358,6 +362,10 @@ class Students(QWidget):
         self.model = TableModel(data, self.columns, "students")
         self.table.setModel(self.model)
 
+    def set_status_tip(self):
+        self.table.setStatusTip("Dublu click pentru a vedea mai multe informatii si pentru a crea o inchiriere")    
+
+
 class Borrows(QWidget):
 
     def __init__(self, database, borrows_ui, borrow_dialog_ui):
@@ -375,7 +383,7 @@ class Borrows(QWidget):
 
         self.table = TableView(self.columns)
         self.verticalLayout.addWidget(self.table)
-
+        self.set_status_tip()
         self.insert_data(data)
 
         shortcut = QShortcut(QKeySequence("Return"), self)
@@ -463,14 +471,30 @@ class Borrows(QWidget):
         self.cur.execute("UPDATE books SET status = ? WHERE book_id = ?", ("libera", book_id))
         self.con.commit()
         self.query()
+    
+    def borrow_undo(self, borrow_id):
+        self.cur = self.database.cursor
+        self.con = self.database.con
+        self.cur.execute("UPDATE borrows SET status = ?, return_date = ? WHERE borrow_id = ?", (0, None, borrow_id))
+        self.cur.execute("SELECT book_id FROM borrows WHERE borrow_id =  ?", (borrow_id,))
+        book_id = self.cur.fetchone()[0]
+        self.cur.execute("UPDATE books SET status = ? WHERE book_id = ?", (borrow_id, book_id))
+        self.con.commit()
+        self.query()
+
 
     def on_cell_double_click(self, index):
         borrow_id = self.model.index(index.row(), 0).data()
-        #if(index.column() == 4): # status column
-        self.borrow_return(borrow_id)
-        # else: 
-        #     dlg = BorrowDialog(self.database, borrow_id, self.borrow_dialog_ui)
-        #     dlg.exec_()
+        status = self.model.index(index.row(), 6).data()
+        if status == 0:
+            self.borrow_return(borrow_id)
+        if status == 1:
+            self.borrow_undo(borrow_id)
+
+    
+    def set_status_tip(self):
+        self.table.setStatusTip("Dublu click pe o inchiriere pentru a marca cartea ca fiind returnata. Verde - returnata, Galben - inchiriata, Rosu - inchiriata mai mult de 1 luna")    
+
 
 #------------------DIALOGS--------------------------------
 
@@ -484,7 +508,7 @@ class StudentDialog(QDialog):
         uic.loadUi(ui, self)
 
         self.cur.execute("SELECT first_name, last_name, class_number, class_letter, phone, email FROM students WHERE student_id = ?", (int(student_id),))
-        data = cur.fetchone()
+        data = self.cur.fetchone()
         self.name_label.setText('<h1>' + ' '.join((data[0], data[1])) + '</h1>')
         self.class_label.setText('<h2>' + ' '.join((str(data[2]), data[3])) + '<h2>')
         self.phone_label.setText(data[4])
