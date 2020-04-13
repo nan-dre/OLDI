@@ -122,7 +122,7 @@ class OLDIContext(ApplicationContext):
         today = date.today()
         last_backup_date = settings.value("last_backup_date", today)
         difference = (today - last_backup_date).days
-        if difference < 7:
+        if difference > 7:
             self.backup()
 
     def backup(self):
