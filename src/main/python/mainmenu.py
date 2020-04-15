@@ -122,7 +122,7 @@ class OLDIContext(ApplicationContext):
         today = date.today()
         last_backup_date = settings.value("last_backup_date", today)
         difference = (today - last_backup_date).days
-        if difference > 7:
+        if difference > 1:
             self.backup()
 
     def backup(self):
@@ -501,6 +501,7 @@ class Borrows(QWidget):
 class StudentDialog(QDialog):
     def __init__(self, database, student_id, ui, add_borrow_dialog):
         super(StudentDialog, self).__init__()
+        self.database = database
         self.con = database.con
         self.cur = database.cursor
         self.student_id = student_id
@@ -530,7 +531,7 @@ class AddBorrow(QDialog):
         uic.loadUi(ui, self)
 
         self.cur.execute("SELECT first_name, last_name FROM students WHERE student_id = ?", (self.student_id,))
-        name = ' '.join(cur.fetchone())
+        name = ' '.join(self.cur.fetchone())
         self.name_label.setText(name)
         self.date_edit.setDisplayFormat('yyyy-MM-dd')
         today_date = QDate.fromString(str(date.today()), 'yyyy-MM-dd')
