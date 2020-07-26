@@ -50,32 +50,6 @@
       <widget class="QComboBox" name="genre_combobox"/>
      </item>
      <item>
-      <widget class="QLabel" name="status_label">
-       <property name="text">
-        <string>Status</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QComboBox" name="status_combobox">
-       <item>
-        <property name="text">
-         <string>Toate</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Inchiriate</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Neinchiriate</string>
-        </property>
-       </item>
-      </widget>
-     </item>
-     <item>
       <widget class="QPushButton" name="search_button">
        <property name="text">
         <string>Cauta</string>

@@ -10,7 +10,6 @@ from datetime import date
 import shutil
 import os
 from pathlib import Path
-
 from import_module import excel_import
 
 class Database():
@@ -43,36 +42,12 @@ class OLDIContext(ApplicationContext):
 
     @cached_property
     def window(self):
-        if name() == 'Windows': # Windows file dir \
-            main_ui = self.get_resource(r'UIs\main.ui')
-            books_ui = self.get_resource(r'UIs\books.ui')
-            students_ui = self.get_resource(r'UIs\students.ui')
-            borrows_ui = self.get_resource(r'UIs\borrows.ui')
-            add_borrow_ui = self.get_resource(r'UIs\add_borrow.ui')
-            student_dialog = self.get_resource(r'UIs\student_dialog.ui')
-            borrow_dialog_ui = self.get_resource(r'UIs\borrow_dialog.ui')
-            borrow_edit_dialog_ui = self.get_resource(r'UIs\borrow_edit_dialog.ui')
-            books_import_dialog_ui = self.get_resource(r'UIs\books_import_dialog.ui')
-            restart_dialog_ui = self.get_resource(r'UIs\restart_dialog.ui')
-            self.backup_dir = self.get_resource(r'Backups\.backup_dir')
-        else: # Linux file dir /
-            main_ui = self.get_resource(r'UIs/main.ui')
-            books_ui = self.get_resource(r'UIs/books.ui')
-            students_ui = self.get_resource(r'UIs/students.ui')
-            borrows_ui = self.get_resource(r'UIs/borrows.ui')
-            add_borrow_ui = self.get_resource(r'UIs/add_borrow.ui')
-            student_dialog = self.get_resource(r'UIs/student_dialog.ui')
-            borrow_dialog_ui = self.get_resource(r'UIs/borrow_dialog.ui')
-            borrow_edit_dialog_ui = self.get_resource(r'UIs/borrow_edit_dialog.ui')
-            books_import_dialog_ui = self.get_resource(r'UIs/books_import_dialog.ui')
-            restart_dialog_ui = self.get_resource(r'UIs/restart_dialog.ui')
-            self.backup_dir = self.get_resource(r'Backups/.backup_dir')
         books_ui_list = books_ui
         students_ui_list = (students_ui, student_dialog, add_borrow_ui)
         borrows_ui_list = (borrows_ui, borrow_dialog_ui, borrow_edit_dialog_ui)
         import_dialogs_ui_list = books_import_dialog_ui
         self.db_connect()
-        self.main_window = MainWindow(self.database, main_ui, restart_dialog_ui, books_ui_list, students_ui_list, borrows_ui_list, import_dialogs_ui_list)
+        self.main_window = MainWindow(self.database)
         #return MainWindow(database, main_ui, books_ui, students_ui, borrows_ui, add_borrow_ui, student_dialog, borrow_dialog_ui)
         return self.main_window
     
@@ -80,7 +55,7 @@ class OLDIContext(ApplicationContext):
         
         self.database = Database()
         settings = QSettings("OLDI", "Nandre")
-        #settings.setValue("windows_db_path", r'D:\Proiecte\Python\OLDI\src\main\resources\base\DBs\Biblioteca.db')
+        settings.setValue("windows_db_path", r'D:\Proiecte\Python\OLDI\src\main\resources\base\DBs\Biblioteca.db')
         if name() == 'Windows':
             db_path = settings.value("windows_db_path")
             ok = self.check_database(db_path)
@@ -130,9 +105,8 @@ class OLDIContext(ApplicationContext):
         today = date.today()
         if name() == 'Windows':
             db_path = Path(settings.value("windows_db_path"))
-            backup_dir = Path(self.backup_dir)
-            backup_dir = backup_dir.parent
-            backup_path = os.path.join(backup_dir, ''.join([db_path.stem, str(today), db_path.suffix]))
+            backup_dir_parent = backup_dir.parent
+            backup_path = os.path.join(backup_dir_parent, ''.join([db_path.stem, str(today), db_path.suffix]))
             shutil.copy2(db_path, backup_path)
 
     @cached_property
@@ -143,19 +117,19 @@ class OLDIContext(ApplicationContext):
 
 class MainWindow(QMainWindow):
 
-    def __init__(self, database, main_ui, restart_dialog_ui, books_ui_list, students_ui_list, borrows_ui_list, import_dialogs_ui_list):
+    def __init__(self, database):
         super(MainWindow, self).__init__()
         uic.loadUi(main_ui, self)
         
         self.database = database
         self.restart_dialog_ui = restart_dialog_ui
-        self.books_ui = books_ui_list
-        self.students_ui = students_ui_list[0]
-        self.student_dialog = students_ui_list[1]
-        self.add_borrow_dialog = students_ui_list[2]
-        self.borrows_ui = borrows_ui_list[0]
-        self.borrow_dialog_ui = borrows_ui_list[1]
-        self.books_import_dialog_ui = import_dialogs_ui_list
+        self.books_ui = books_ui
+        self.students_ui = students_ui
+        self.student_dialog = student_dialog
+        self.add_borrow_dialog = add_borrow_ui
+        self.borrows_ui = borrows_ui
+        self.borrow_dialog_ui = borrow_dialog_ui
+        self.books_import_dialog_ui = books_import_dialog_ui
 
         self.pagelayout = self.centralwidget.layout()
         self.tabs_layout = QtWidgets.QStackedLayout()
@@ -365,7 +339,6 @@ class Students(QWidget):
     def set_status_tip(self):
         self.table.setStatusTip("Dublu click pentru a vedea mai multe informatii si pentru a crea o inchiriere")    
 
-
 class Borrows(QWidget):
 
     def __init__(self, database, borrows_ui, borrow_dialog_ui):
@@ -495,7 +468,6 @@ class Borrows(QWidget):
     def set_status_tip(self):
         self.table.setStatusTip("Dublu click pe o inchiriere pentru a marca cartea ca fiind returnata. Verde - returnata, Galben - inchiriata, Rosu - inchiriata mai mult de 1 luna")    
 
-
 #------------------DIALOGS--------------------------------
 
 class StudentDialog(QDialog):
@@ -553,41 +525,7 @@ class AddBorrow(QDialog):
         self.con.commit()
         self.close()
 
-class BorrowDialog(QDialog):
-    def __init__(self, database, borrow_id, ui):
-        super(BorrowDialog, self).__init__()
-        self.database = database
-        self.con = database.con
-        self.cur = database.cursor
-        self.borrow_id = borrow_id
-        uic.loadUi(ui, self)
 
-        
-        
-        self.cur.execute("SELECT date, student_id, book_id, status FROM borrows WHERE borrow_id = ?", str(self.borrow_id))
-        borrow_data = self.cur.fetchone()
-
-        self.date = QDate.fromString(borrow_data[0], 'yyyy-MM-dd')
-        self.student_id = borrow_data[1]
-        self.book_id = borrow_data[2]
-        self.status = borrow_data[3]
-
-        self.id_label.setText(str(borrow_id))
-        self.date_edit.setDisplayFormat('yyyy-MM-dd')
-        self.date_edit.setDate(self.date)
-        self.student_box.setValue(self.student_id)
-        self.book_box.setValue(self.book_id)
-        if self.status == 0:
-            self.status_box.setCurrentIndex(0)
-        elif self.status == 1:
-            self.status_box.setCurrentIndex(1)
-        elif self.status == -1:
-            self.status_box.setCurrentIndex(2)
-
-        self.ok_button.pressed.connect(self.accept)
-        self.cancel_button.pressed.connect(self.reject)
-
-    def accept(self):
         self.cur = self.database.cursor
         
         index = self.status_box.currentIndex()
@@ -617,7 +555,7 @@ class BooksImport(QDialog):
         uic.loadUi(ui, self)
         self.con = database.con
         self.cur = database.cursor
-        self.setWindowTitle("Import elevi")
+        self.setWindowTitle("Import carti")
 
         for genre in self.get_genres():
             self.genre_combobox.addItem(str(genre[0]) + ' ' + genre[1])
@@ -659,4 +597,28 @@ class BooksImport(QDialog):
 
 if __name__ == '__main__':  
     appctxt = OLDIContext()
+    if name() == 'Windows': # Windows file dir \
+        main_ui = appctxt.get_resource(r'UIs\main.ui')
+        books_ui = appctxt.get_resource(r'UIs\books.ui')
+        students_ui = appctxt.get_resource(r'UIs\students.ui')
+        borrows_ui = appctxt.get_resource(r'UIs\borrows.ui')
+        add_borrow_ui = appctxt.get_resource(r'UIs\add_borrow.ui')
+        student_dialog = appctxt.get_resource(r'UIs\student_dialog.ui')
+        borrow_dialog_ui = appctxt.get_resource(r'UIs\borrow_dialog.ui')
+        borrow_edit_dialog_ui = appctxt.get_resource(r'UIs\borrow_edit_dialog.ui')
+        books_import_dialog_ui = appctxt.get_resource(r'UIs\books_import_dialog.ui')
+        restart_dialog_ui = appctxt.get_resource(r'UIs\restart_dialog.ui')
+        backup_dir = appctxt.get_resource(r'Backups\.backup_dir')
+    else: # Linux file dir /
+        main_ui = appctxt.get_resource(r'UIs/main.ui')
+        books_ui = appctxt.get_resource(r'UIs/books.ui')
+        students_ui = appctxt.get_resource(r'UIs/students.ui')
+        borrows_ui = appctxt.get_resource(r'UIs/borrows.ui')
+        add_borrow_ui = appctxt.get_resource(r'UIs/add_borrow.ui')
+        student_dialog = appctxt.get_resource(r'UIs/student_dialog.ui')
+        borrow_dialog_ui = appctxt.get_resource(r'UIs/borrow_dialog.ui')
+        borrow_edit_dialog_ui = appctxt.get_resource(r'UIs/borrow_edit_dialog.ui')
+        books_import_dialog_ui = appctxt.get_resource(r'UIs/books_import_dialog.ui')
+        restart_dialog_ui = appctxt.get_resource(r'UIs/restart_dialog.ui')
+        backup_dir = appctxt.get_resource(r'Backups/.backup_dir')
     appctxt.run_app()
